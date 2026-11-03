@@ -3,169 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虚拟多人口堂 - 陪伴空间</title>
+    <meta name="theme-color" content="#101d38">
+    <title>虚拟课室</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #0b0c10; font-family: sans-serif; display: flex; align-items: center; justify-content: center; }
-        
-        /* 唯美星空背景与氛围 */
-        .universe { position: absolute; width: 100%; height: 100%; background: radial-gradient(circle at center, #1f2833 0%, #0b0c10 80%); z-index: 1; overflow: hidden; }
-        
-        /* 登录弹窗 */
-        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 12, 16, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.5s; }
-        .login-box { background: #1f2833; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; width: 80%; max-width: 320px; border: 1px solid #45f3ff; }
-        .login-box h2 { color: #45f3ff; margin-top: 0; font-size: 20px; }
-        .login-box p { color: #c5a880; font-size: 13px; line-height: 1.4; margin-bottom: 20px; }
-        .login-box input { width: 90%; padding: 12px; border-radius: 25px; border: none; background: #0b0c10; color: white; text-align: center; font-size: 16px; margin-bottom: 20px; outline: none; border: 1px solid #1f2833; }
-        .login-box input:focus { border-color: #45f3ff; }
-        .login-box button { background: linear-gradient(45deg, #00bbf9, #00f5d4); color: #0b0c10; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%; }
-        
-        /* 课室 UI 界面 */
-        #room-ui { position: absolute; top: 20px; left: 20px; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.8); pointer-events: none; z-index: 10; }
-        #room-ui h1 { margin: 0; font-size: 18px; color: #45f3ff; }
-        #counter { background: rgba(69, 243, 255, 0.2); padding: 4px 10px; border-radius: 10px; font-size: 12px; display: inline-block; margin-top: 5px; border: 1px solid rgba(69, 243, 255, 0.4); }
-        
-        /* 底部互动区 */
-        #footer-bar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10; width: 90%; max-width: 400px; }
-        #status-txt { background: rgba(255,255,255,0.9); padding: 12px; border-radius: 25px; font-size: 14px; text-align: center; flex-grow: 1; font-weight: bold; color: #1f2833; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        #exit-btn { background: #e43f5a; color: white; border: none; border-radius: 25px; padding: 0 20px; font-weight: bold; cursor: pointer; }
-        
-        /* 仿《山寺》唯美连线与陪伴席位 */
-        .classroom-stage { position: relative; width: 90vw; height: 50vh; z-index: 2; overflow: visible; display: flex; justify-content: center; align-items: center; }
-        svg { width: 100%; height: 100%; overflow: visible; }
-        
-        /* 呼吸小沙弥/学生分身的动画 */
-        .student-avatar { animation: breathe 3s ease-in-out infinite; transform-origin: center; filter: drop-shadow(0 0 8px var(--glow-color)); }
-        .student-avatar:nth-child(2n) { animation-delay: -0.7s; }
-        .student-avatar:nth-child(3n) { animation-delay: -1.4s; }
-        .student-avatar:nth-child(4n) { animation-delay: -2.1s; }
-        
-        @keyframes breathe {
-            0%, 100% { transform: translateY(0px) scale(1); opacity: 0.7; }
-            50% { transform: translateY(-6px) scale(1.05); opacity: 1; }
-        }
-        
-        /* 教室中心的聚集线 */
-        .center-glow { animation: pulse 2s ease-in-out infinite; }
-        @keyframes pulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.6; }
-        }
+        * { box-sizing: border-box; }
+        :root { color-scheme: dark; font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+        body { margin: 0; min-height: 100vh; overflow: hidden; color: #f5fbff; background: radial-gradient(ellipse at 50% 35%, #263f66, #101a31 70%); }
+        #topbar { position: absolute; z-index: 2; top: 16px; left: 18px; right: 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; pointer-events: none; }
+        #room-heading { margin: 0; font-size: clamp(16px, 3vw, 22px); text-shadow: 0 2px 8px #081329; }
+        #room-subtitle { margin-top: 5px; color: #b6d5f3; font-size: 12px; }
+        #leave-btn { pointer-events: auto; border: 1px solid #ffffff50; border-radius: 20px; padding: 8px 16px; color: #fff; background: #182b49c9; cursor: pointer; }
+        #leave-btn:hover { background: #29466d; }
+        #stage { position: absolute; inset: 64px 14px 90px; display: grid; place-items: center; }
+        canvas { display: block; width: min(100%, 1100px); height: 100%; max-height: 720px; border: 1px solid #b9ddff44; border-radius: 24px; background: #152840; box-shadow: 0 22px 70px #02081488; outline: none; }
+        #help { position: absolute; z-index: 2; left: 50%; bottom: 20px; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 24px); padding: 10px 16px; border: 1px solid #ffffff28; border-radius: 16px; color: #d7eaff; background: #101d38d9; text-align: center; font-size: 13px; }
+        #login-overlay { position: fixed; z-index: 5; inset: 0; display: grid; place-items: center; padding: 20px; background: #081326eF; transition: opacity .25s ease; }
+        .login-box { width: min(100%, 360px); padding: 26px; border: 1px solid #75dfff88; border-radius: 22px; background: linear-gradient(145deg, #223958, #14253f); box-shadow: 0 20px 70px #0008; text-align: center; }
+        .login-box h2 { margin: 0 0 10px; color: #8beaff; }
+        .login-box p { color: #c4d5e8; font-size: 14px; line-height: 1.6; }
+        #username-input { width: 100%; margin: 12px 0; padding: 12px 14px; border: 1px solid #79dfff66; border-radius: 12px; color: #fff; background: #0c1930; font-size: 16px; }
+        #start-btn { width: 100%; padding: 12px; border: 0; border-radius: 22px; color: #10233b; background: linear-gradient(90deg, #71e6ff, #76f5cf); font-weight: 800; font-size: 15px; cursor: pointer; }
+        #mobile-controls { display: none; position: absolute; right: 18px; bottom: 92px; z-index: 3; grid-template: repeat(2, 46px) / repeat(3, 46px); gap: 4px; }
+        .move-key { border: 1px solid #ffffff70; border-radius: 12px; color: #fff; background: #102342c9; font-size: 20px; touch-action: none; user-select: none; }
+        .move-key:active { background: #28b8d5; }
+        @media (pointer: coarse) { #mobile-controls { display: grid; } #help { left: 12px; transform: none; width: auto; max-width: calc(100vw - 170px); font-size: 11px; } }
+        @media (max-height: 520px) { #stage { inset: 56px 10px 60px; } #help { bottom: 8px; padding: 7px 10px; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
     </style>
 </head>
 <body>
+    <header id="topbar">
+        <div><h1 id="room-heading">虚拟课室</h1><div id="room-subtitle">云端学习空间 · 自由移动光点</div></div>
+        <button id="leave-btn" type="button">返回校园</button>
+    </header>
 
-    <div class="universe"></div>
+    <main id="stage" aria-label="可用方向键移动光点的虚拟课室">
+        <canvas id="room-canvas" tabindex="0" aria-label="虚拟课室场景。使用键盘方向键或 WASD 移动你的光点。">你的浏览器不支持 Canvas。</canvas>
+    </main>
+    <div id="help">键盘 ↑ ↓ ← → / WASD 移动光点 · 走到课桌旁一起学习</div>
+    <div id="mobile-controls" aria-label="移动控制">
+        <span></span><button class="move-key" data-key="ArrowUp" aria-label="向上">↑</button><span></span>
+        <button class="move-key" data-key="ArrowLeft" aria-label="向左">←</button><button class="move-key" data-key="ArrowDown" aria-label="向下">↓</button><button class="move-key" data-key="ArrowRight" aria-label="向右">→</button>
+    </div>
 
-    <!-- 1. 自拟名字登入弹窗 -->
     <div id="login-overlay">
-        <div class="login-box">
-            <h2>🎒 化身数字学生</h2>
-            <p>参考韩国《山寺》冥想概念：在这里，你可以放下压力，与在线同学静静在云端课室相伴学习。</p>
-            <input type="text" id="username-input" placeholder="输入你想用的学生昵称..." maxlength="10">
-            <button onclick="enterClassroom()">化身登入课室</button>
-        </div>
-    </div>
-
-    <!-- 2. 课室内部界面 -->
-    <div id="room-ui">
-        <h1 id="room-title">加载中...</h1>
-        <div id="counter">🟢 当前课室在学...</div>
-    </div>
-
-    <!-- 3. 原生全动态陪伴画面 -->
-    <div class="classroom-stage" id="stage" style="display:none;">
-        <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
-            <!-- 教室中心的能量核心/讲台光晕 -->
-            <circle cx="200" cy="150" r="15" fill="#45f3ff" class="center-glow" filter="blur(5px)" style="opacity:0.5;"/>
-            <circle cx="200" cy="150" r="5" fill="#ffffff"/>
-            
-            <!-- 环绕的陪伴学生席位群 (动态生成) -->
-            <g id="students-group"></g>
-        </svg>
-    </div>
-
-    <div id="footer-bar">
-        <div id="status-txt">准备入座...</div>
-        <button id="exit-btn" onclick="window.location.href='index.html'">离开</button>
+        <form class="login-box" id="login-form">
+            <h2>✨ 进入虚拟课室</h2>
+            <p>输入你的昵称，化身为一颗发光的小光点。使用键盘方向键或 WASD 在课室中自由移动。</p>
+            <input id="username-input" type="text" maxlength="12" placeholder="输入学生昵称" autocomplete="nickname" aria-label="学生昵称" required>
+            <button id="start-btn" type="submit">进入课室</button>
+        </form>
     </div>
 
     <script>
-        let currentUserName = "";
-        
-        // 获取页面参数
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomName = urlParams.get('room') || '公共学习空间';
-        document.getElementById('room-title').innerText = roomName;
+        (() => {
+            const canvas = document.getElementById('room-canvas');
+            const ctx = canvas.getContext('2d');
+            const overlay = document.getElementById('login-overlay');
+            const form = document.getElementById('login-form');
+            const nameInput = document.getElementById('username-input');
+            const heading = document.getElementById('room-heading');
+            const leaveBtn = document.getElementById('leave-btn');
+            const params = new URLSearchParams(location.search);
+            const roomName = params.get('room') || '公共学习空间';
+            heading.textContent = roomName;
+            document.title = `${roomName} · 虚拟课室`;
 
-        // 随机在线人数
-        const randomCount = Math.floor(Math.random() * 15) + 32;
-        document.getElementById('counter').innerHTML = `🟢 当前课室在学：<span>${randomCount}</span> / 50 人`;
+            const world = { width: 1000, height: 620 };
+            const player = { x: 500, y: 490, radius: 11, speed: 245, name: '' };
+            const keys = new Set();
+            let active = false;
+            let lastTime = 0;
+            let scale = 1;
+            let offsetX = 0;
+            let offsetY = 0;
+            const desks = [
+                { x: 260, y: 220 }, { x: 420, y: 220 }, { x: 580, y: 220 }, { x: 740, y: 220 },
+                { x: 260, y: 350 }, { x: 420, y: 350 }, { x: 580, y: 350 }, { x: 740, y: 350 }
+            ];
+            const colors = ['#70e1ff', '#ffd477', '#a8f08b', '#d2a4ff', '#ff9bb2', '#76f0d0'];
+            const roomColor = colors[[...roomName].reduce((sum, char) => sum + char.charCodeAt(0), 0) % colors.length];
 
-        function enterClassroom() {
-            const input = document.getElementById('username-input').value.trim();
-            if (input === "") {
-                alert("请先帮你的虚拟分身取一个名字吧！");
-                return;
-            }
-            currentUserName = input;
-            document.getElementById('login-overlay').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('status-txt').innerText = `✨ 学生【${currentUserName}】已在教室蒲团入座`;
-                document.getElementById('stage').style.display = 'flex';
-                generateClassroomSeats();
-            }, 500);
-        }
-
-        // 动态生成仿《山寺》的环绕陪伴星光阵
-        function generateClassroomSeats() {
-            const group = document.getElementById('students-group');
-            let htmlContent = "";
-
-            // 1. 先生成30多个其他同学的陪伴荧光分身
-            for (let i = 0; i < randomCount - 1; i++) {
-                const angle = (i / (randomCount - 1)) * Math.PI * 2 + Math.random() * 0.4;
-                const radius = 50 + Math.random() * 70; // 错落环绕在中心周围
-                const cx = 200 + Math.cos(angle) * radius;
-                const cy = 150 + Math.sin(angle) * radius;
-                
-                // 随机温暖色调（暖橙、青绿、浅紫）
-                const colors = ["#ff9f43", "#00f5d4", "#9b5de5", "#00bbf9"];
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                
-                htmlContent += `
-                    <g class="student-avatar" style="--glow-color: ${color};">
-                        <!-- 连向中心的静谧陪伴线 -->
-                        <line x1="200" y1="150" x2="${cx}" y2="${cy}" stroke="${color}" stroke-width="0.5" opacity="0.15" stroke-dasharray="2,4" />
-                        <!-- 蒲团垫 -->
-                        <ellipse cx="${cx}" cy="${cy+6}" rx="10" ry="4" fill="rgba(255,255,255,0.05)" />
-                        <!-- 呼吸能量球/学生代表 -->
-                        <circle cx="${cx}" cy="${cy}" r="5" fill="${color}" />
-                        <circle cx="${cx}" cy="${cy}" r="2" fill="#fff" opacity="0.6"/>
-                    </g>
-                `;
+            function resize() {
+                const rect = canvas.getBoundingClientRect();
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = Math.max(1, Math.round(rect.width * dpr));
+                canvas.height = Math.max(1, Math.round(rect.height * dpr));
+                scale = Math.min(canvas.width / world.width, canvas.height / world.height);
+                offsetX = (canvas.width - world.width * scale) / 2;
+                offsetY = (canvas.height - world.height * scale) / 2;
+                draw();
             }
 
-            // 2. 在正前方最显眼的位置，生成“你（静静）”的专属高亮分身
-            const myAngle = Math.PI * 0.5; // 放在正下方中央偏前
-            const myRadius = 45;
-            const myCx = 200 + Math.cos(myAngle) * myRadius;
-            const myCy = 150 + Math.sin(myAngle) * myRadius;
-            
-            htmlContent += `
-                <g class="student-avatar" style="--glow-color: #45f3ff; transform: scale(1.2);">
-                    <line x1="200" y1="150" x2="${myCx}" y2="${myCy}" stroke="#45f3ff" stroke-width="1" opacity="0.4" />
-                    <ellipse cx="${myCx}" cy="${myCy+8}" rx="14" ry="5" fill="rgba(69, 243, 255, 0.2)" stroke="#45f3ff" stroke-width="0.5" />
-                    <!-- 你的主透光能量球 -->
-                    <circle cx="${myCx}" cy="${myCy}" r="7" fill="#45f3ff" />
-                    <circle cx="${myCx}" cy="${myCy}" r="3" fill="#fff" />
-                    <!-- 你的名字标签 -->
-                    <text x="${myCx}" y="${myCy - 12}" fill="#45f3ff" font-size="9" font-weight="bold" text-anchor="middle" bgcolor="#000">${currentUserName} (你)</text>
-                </g>
-            `;
+            function roundedRect(x, y, w, h, r, fill, stroke) {
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, h, r);
+                ctx.fillStyle = fill;
+                ctx.fill();
+                if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
+            }
 
-            group.innerHTML = htmlContent;
-        }
+            function drawDesk(desk, index) {
+                // 桌椅投影及桌面，俯视构图配合透视色阶营造空间感。
+                ctx.fillStyle = '#09172a55';
+                ctx.beginPath(); ctx.ellipse(desk.x + 5, desk.y + 42, 55, 17, 0, 0, Math.PI * 2); ctx.fill();
+                roundedRect(desk.x - 42, desk.y + 18, 30, 25, 6, '#526b83', '#91abc0');
+                roundedRect(desk.x + 12, desk.y + 18, 30, 25, 6, '#526b83', '#91abc0');
+                roundedRect(desk.x - 52, desk.y - 7, 104, 45, 10, '#b78664', '#f0c99a');
+                roundedRect(desk.x - 46, desk.y - 3, 92, 33, 7, index % 2 ? '#d2a77e' : '#c69a72');
+                ctx.fillStyle = '#fff2ce'; ctx.globalAlpha = .8;
+                ctx.fillRect(desk.x - 8, desk.y + 1, 17, 12);
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = '#243b56'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(`学习桌 ${index + 1}`, desk.x, desk.y + 23);
+            }
+
+            function draw() {
+                if (!ctx || !canvas.width || !canvas.height) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.translate(offsetX, offsetY);
+                ctx.scale(scale, scale);
+
+                // 墙面与木质地板
+                const floor = ctx.createLinearGradient(0, 40, 0, world.height);
+                floor.addColorStop(0, '#d7e4eb'); floor.addColorStop(1, '#9bb6c5');
+                roundedRect(28, 28, 944, 564, 24, floor, '#d8edfa');
+                ctx.save(); ctx.beginPath(); ctx.roundRect(29, 29, 942, 562, 23); ctx.clip();
+                ctx.fillStyle = '#7b9dad';
+                for (let y = 110; y < 590; y += 48) {
+                    ctx.fillRect(30, y, 940, 2);
+                    for (let x = (Math.floor(y / 48) % 2) * 55 + 30; x < 970; x += 110) ctx.fillRect(x, y - 46, 2, 48);
+                }
+                // 窗户与黑板
+                roundedRect(95, 55, 190, 75, 12, '#a9e3f2', '#fff');
+                roundedRect(715, 55, 190, 75, 12, '#a9e3f2', '#fff');
+                ctx.strokeStyle = '#f7ffff'; ctx.lineWidth = 5;
+                ctx.beginPath(); ctx.moveTo(190, 56); ctx.lineTo(190, 129); ctx.moveTo(810, 56); ctx.lineTo(810, 129); ctx.stroke();
+                roundedRect(355, 52, 290, 92, 12, '#244c4b', '#d8c49a');
+                ctx.fillStyle = '#e6f4ce'; ctx.font = 'bold 21px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(roomName.length > 18 ? `${roomName.slice(0, 17)}…` : roomName, 500, 94);
+                ctx.font = '13px sans-serif'; ctx.fillStyle = '#b9dfc2'; ctx.fillText('今天也一起认真学习吧', 500, 120);
+                // 讲台
+                roundedRect(435, 158, 130, 28, 8, '#87664f', '#e4c49b');
+                desks.forEach(drawDesk);
+                // 其他同学的静态陪伴光点
+                const classmates = [
+                    [180, 286, '#ffb56b'], [340, 286, '#c4a4ff'], [500, 286, '#79e9d5'], [660, 286, '#ff9eb4'], [820, 286, '#87caff'],
+                    [180, 416, '#a7ed8a'], [340, 416, '#7fe0ff'], [660, 416, '#ffd477'], [820, 416, '#d3a6ff']
+                ];
+                classmates.forEach(([x, y, color]) => {
+                    ctx.fillStyle = color + '55'; ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+                });
+                ctx.restore();
+
+                // 玩家光点、柔和光晕与昵称
+                const glow = ctx.createRadialGradient(player.x, player.y, 1, player.x, player.y, 34);
+                glow.addColorStop(0, roomColor + 'dd'); glow.addColorStop(1, roomColor + '00');
+                ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(player.x, player.y, 34, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = roomColor; ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(player.x - 3, player.y - 4, 4, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#18324b'; ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText(player.name ? `${player.name}（你）` : '你', player.x, player.y - 24);
+                ctx.restore();
+            }
+
+            function collides(x, y) {
+                // 留出边界，避免光点穿过课桌。
+                if (x < 75 || x > 925 || y < 190 || y > 555) return true;
+                return desks.some(desk => Math.abs(x - desk.x) < 58 && Math.abs(y - (desk.y + 8)) < 36);
+            }
+
+            function update(time) {
+                if (!active) return;
+                const dt = Math.min((time - (lastTime || time)) / 1000, .04);
+                lastTime = time;
+                let dx = 0, dy = 0;
+                if (keys.has('ArrowLeft') || keys.has('a')) dx -= 1;
+                if (keys.has('ArrowRight') || keys.has('d')) dx += 1;
+                if (keys.has('ArrowUp') || keys.has('w')) dy -= 1;
+                if (keys.has('ArrowDown') || keys.has('s')) dy += 1;
+                if (dx && dy) { dx *= Math.SQRT1_2; dy *= Math.SQRT1_2; }
+                const nextX = player.x + dx * player.speed * dt;
+                const nextY = player.y + dy * player.speed * dt;
+                if (!collides(nextX, player.y)) player.x = nextX;
+                if (!collides(player.x, nextY)) player.y = nextY;
+                draw();
+                requestAnimationFrame(update);
+            }
+
+            function keyName(key) {
+                if (key === 'ArrowUp' || key.toLowerCase() === 'w') return 'ArrowUp';
+                if (key === 'ArrowDown' || key.toLowerCase() === 's') return 'ArrowDown';
+                if (key === 'ArrowLeft' || key.toLowerCase() === 'a') return 'ArrowLeft';
+                if (key === 'ArrowRight' || key.toLowerCase() === 'd') return 'ArrowRight';
+                return key;
+            }
+            document.addEventListener('keydown', event => {
+                if (!active || event.target === nameInput) return;
+                const key = keyName(event.key);
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) event.preventDefault();
+                keys.add(key);
+            });
+            document.addEventListener('keyup', event => keys.delete(keyName(event.key)));
+            window.addEventListener('blur', () => keys.clear());
+            document.querySelectorAll('.move-key').forEach(button => {
+                const key = button.dataset.key;
+                button.addEventListener('pointerdown', event => { event.preventDefault(); button.setPointerCapture(event.pointerId); keys.add(key); });
+                ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => button.addEventListener(type, () => keys.delete(key)));
+            });
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                player.name = nameInput.value.trim() || '同学';
+                active = true;
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.style.display = 'none'; canvas.focus(); }, 250);
+                lastTime = 0;
+                requestAnimationFrame(update);
+            });
+            leaveBtn.addEventListener('click', () => { location.href = 'index.html'; });
+            window.addEventListener('resize', resize);
+            resize();
+            nameInput.focus();
+        })();
     </script>
 </body>
 </html>
