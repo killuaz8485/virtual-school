@@ -22,6 +22,11 @@
             ".write": "auth != null && !data.exists()",
             ".validate": "newData.hasChildren(['uid', 'name', 'text', 'createdAt']) && newData.child('uid').val() === auth.uid && newData.child('name').isString() && newData.child('name').val().length <= 20 && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 300 && newData.child('createdAt').isNumber()"
           }
+        },
+        "activity": {
+          ".read": "auth != null",
+          ".write": "auth != null && auth.uid === 'REPLACE_WITH_TEACHER_UID'",
+          ".validate": "newData.hasChildren(['url', 'threshold', 'countdownSeconds', 'enabled', 'updatedAt']) && newData.child('url').isString() && newData.child('url').val().length <= 500 && newData.child('threshold').isNumber() && newData.child('threshold').val() >= 2 && newData.child('threshold').val() <= 50 && newData.child('countdownSeconds').isNumber() && newData.child('countdownSeconds').val() >= 5 && newData.child('countdownSeconds').val() <= 120 && newData.child('enabled').isBoolean() && newData.child('updatedAt').isNumber()"
         }
       }
     }
