@@ -1,273 +1,86 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#101d38">
-    <title>虚拟课室</title>
-    <style>
-        * { box-sizing: border-box; }
-        :root { color-scheme: dark; font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
-        body { margin: 0; min-height: 100vh; overflow: hidden; color: #f5fbff; background: radial-gradient(ellipse at 50% 35%, #263f66, #101a31 70%); }
-        #topbar { position: absolute; z-index: 2; top: 16px; left: 18px; right: 18px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; pointer-events: none; }
-        #room-heading { margin: 0; font-size: clamp(16px, 3vw, 22px); text-shadow: 0 2px 8px #081329; }
-        #room-subtitle { margin-top: 5px; color: #b6d5f3; font-size: 12px; }
-        #leave-btn { pointer-events: auto; border: 1px solid #ffffff50; border-radius: 20px; padding: 8px 16px; color: #fff; background: #182b49c9; cursor: pointer; }
-        #leave-btn:hover { background: #29466d; }
-        #stage { position: absolute; inset: 64px 14px 90px; display: grid; place-items: center; }
-        canvas { display: block; width: min(100%, 1100px); height: 100%; max-height: 720px; border: 1px solid #b9ddff44; border-radius: 24px; background: #152840; box-shadow: 0 22px 70px #02081488; outline: none; touch-action: manipulation; }
-        #help { position: absolute; z-index: 2; left: 50%; bottom: 20px; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 24px); padding: 10px 16px; border: 1px solid #ffffff28; border-radius: 16px; color: #d7eaff; background: #101d38d9; text-align: center; font-size: 13px; }
-        #login-overlay { position: fixed; z-index: 5; inset: 0; display: grid; place-items: center; padding: 20px; background: #081326ef; transition: opacity .25s ease; }
-        .login-box { width: min(100%, 360px); padding: 26px; border: 1px solid #75dfff88; border-radius: 22px; background: linear-gradient(145deg, #223958, #14253f); box-shadow: 0 20px 70px #0008; text-align: center; }
-        .login-box h2 { margin: 0 0 10px; color: #8beaff; }
-        .login-box p { color: #c4d5e8; font-size: 14px; line-height: 1.6; }
-        #username-input { width: 100%; margin: 12px 0; padding: 12px 14px; border: 1px solid #79dfff66; border-radius: 12px; color: #fff; background: #0c1930; font-size: 16px; }
-        #start-btn { width: 100%; padding: 12px; border: 0; border-radius: 22px; color: #10233b; background: linear-gradient(90deg, #71e6ff, #76f5cf); font-weight: 800; font-size: 15px; cursor: pointer; }
-        #mobile-controls { display: none; position: absolute; right: 18px; bottom: 92px; z-index: 3; grid-template: repeat(2, 46px) / repeat(3, 46px); gap: 4px; }
-        .move-key { border: 1px solid #ffffff70; border-radius: 12px; color: #fff; background: #102342c9; font-size: 20px; touch-action: none; user-select: none; }
-        .move-key:active { background: #28b8d5; }
-        @media (pointer: coarse) { #mobile-controls { display: grid; } #help { left: 12px; transform: none; width: auto; max-width: calc(100vw - 170px); font-size: 11px; } }
-        @media (max-height: 520px) { #stage { inset: 56px 10px 60px; } #help { bottom: 8px; padding: 7px 10px; } }
-        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101d38">
+  <title>虚拟课室</title>
+  <style>
+    *{box-sizing:border-box} :root{color-scheme:dark;font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif} body{margin:0;min-height:100vh;overflow:hidden;color:#f5fbff;background:radial-gradient(ellipse at 50% 35%,#263f66,#101a31 70%)}
+    button,input{font:inherit} #topbar{position:absolute;z-index:2;top:14px;left:18px;right:18px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none} #topbar>div,#leave-btn{pointer-events:auto} #room-heading{margin:0;font-size:clamp(16px,3vw,22px);text-shadow:0 2px 8px #081329} #room-subtitle{margin-top:5px;color:#b6d5f3;font-size:12px} #counter{margin-top:6px;color:#d4f5ff;font-size:12px} #leave-btn{border:1px solid #ffffff50;border-radius:20px;padding:8px 16px;color:#fff;background:#182b49c9;cursor:pointer}
+    #stage{position:absolute;inset:85px 14px 90px;display:grid;place-items:center} canvas{display:block;width:min(100%,1200px);height:100%;max-height:760px;border:1px solid #b9ddff44;border-radius:24px;background:#152840;box-shadow:0 22px 70px #02081488;outline:none}
+    #help{position:absolute;z-index:2;left:50%;bottom:18px;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 24px);padding:10px 16px;border:1px solid #ffffff28;border-radius:16px;color:#d7eaff;background:#101d38d9;text-align:center;font-size:12px}
+    #login-overlay{position:fixed;z-index:5;inset:0;display:grid;place-items:center;padding:20px;background:#081326ef;transition:opacity .25s ease} .login-box{width:min(100%,370px);padding:25px;border:1px solid #75dfff88;border-radius:22px;background:linear-gradient(145deg,#223958,#14253f);box-shadow:0 20px 70px #0008;text-align:center} .login-box h2{margin:0 0 10px;color:#8beaff}.login-box p{color:#c4d5e8;font-size:14px;line-height:1.55} #username-input{width:100%;margin:12px 0;padding:12px 14px;border:1px solid #79dfff66;border-radius:12px;color:#fff;background:#0c1930;font-size:16px} #start-btn{width:100%;padding:12px;border:0;border-radius:22px;color:#10233b;background:linear-gradient(90deg,#71e6ff,#76f5cf);font-weight:800;cursor:pointer} #login-error{min-height:20px;color:#ffb1b1;font-size:12px}
+    #chat{position:absolute;z-index:3;right:22px;top:94px;bottom:95px;width:min(300px,32vw);display:flex;flex-direction:column;border:1px solid #c5e1ff42;border-radius:16px;background:#0c1a31d9;backdrop-filter:blur(8px);overflow:hidden} #chat h2{margin:0;padding:12px 14px;border-bottom:1px solid #ffffff22;font-size:15px} #chat-messages{flex:1;overflow:auto;padding:10px 12px;list-style:none;margin:0} #chat-messages li{margin:0 0 9px;padding:8px 10px;border-radius:10px;background:#ffffff12;overflow-wrap:anywhere;font-size:12px} #chat-messages strong{color:#8beaff;margin-right:5px} #chat-messages time{float:right;color:#9eb2c9;font-size:10px} #chat-form{display:flex;gap:6px;padding:9px;border-top:1px solid #ffffff22} #chat-input{min-width:0;flex:1;padding:9px;border:1px solid #ffffff35;border-radius:10px;color:#fff;background:#08152a} #chat-form button,#activity-button{border:0;border-radius:10px;padding:8px 11px;color:#10233b;background:#7de8dc;font-weight:700;cursor:pointer}
+    #activity-card{position:absolute;z-index:3;left:50%;top:92px;transform:translateX(-50%);display:none;align-items:center;gap:10px;padding:10px 14px;border:1px solid #ffe59a88;border-radius:14px;background:#352d1de8;color:#fff4d0;font-size:13px} #activity-card.ready{display:flex}
+    #mobile-controls{display:none;position:absolute;z-index:3;left:14px;bottom:95px;grid-template:repeat(2,42px)/repeat(3,42px);gap:4px}.move-key{border:1px solid #ffffff70;border-radius:11px;color:#fff;background:#102342c9;font-size:19px;touch-action:none;user-select:none}.move-key:active{background:#28b8d5}
+    @media(pointer:coarse){#mobile-controls{display:grid}#chat{right:10px;top:auto;bottom:198px;height:190px;width:min(270px,58vw)}#help{left:10px;transform:none;width:min(42vw,250px);font-size:10px}#activity-card{top:88px;max-width:95vw;font-size:11px}}
+    @media(max-height:550px){#stage{inset:70px 10px 58px}#chat{bottom:65px;top:78px}#help{bottom:5px;padding:6px 9px}}
+  </style>
 </head>
 <body>
-    <header id="topbar">
-        <div><h1 id="room-heading">虚拟课室</h1><div id="room-subtitle">云端学习空间 · 自由移动光点</div></div>
-        <button id="leave-btn" type="button">返回校园</button>
-    </header>
-    <main id="stage" aria-label="可用方向键移动光点并与同学互动的虚拟课室">
-        <canvas id="room-canvas" tabindex="0" aria-label="课室场景。使用方向键或 WASD 移动，点击同学光点查看聊天气泡。">你的浏览器不支持 Canvas。</canvas>
-    </main>
-    <div id="help">方向键 / WASD 移动 · 走近或点击同学光点，和同学打个招呼</div>
-    <div id="mobile-controls" aria-label="移动控制">
-        <span></span><button class="move-key" data-key="ArrowUp" aria-label="向上">↑</button><span></span>
-        <button class="move-key" data-key="ArrowLeft" aria-label="向左">←</button><button class="move-key" data-key="ArrowDown" aria-label="向下">↓</button><button class="move-key" data-key="ArrowRight" aria-label="向右">→</button>
-    </div>
-    <div id="login-overlay">
-        <form class="login-box" id="login-form">
-            <h2>✨ 进入虚拟课室</h2>
-            <p>输入昵称，化身发光的小光点。使用方向键或 WASD 移动；走近同学或点击他们的光点，可以看到聊天气泡。</p>
-            <input id="username-input" type="text" maxlength="12" placeholder="输入学生昵称" autocomplete="nickname" aria-label="学生昵称" required>
-            <button id="start-btn" type="submit">进入课室</button>
-        </form>
-    </div>
+  <header id="topbar"><div><h1 id="room-heading">虚拟课室</h1><div id="room-subtitle">50人在线课堂</div><div id="counter">连接中…</div></div><button id="leave-btn" type="button">离开课室</button></header>
+  <main id="stage"><canvas id="room-canvas" aria-label="50人虚拟课室，方向键或 WASD 移动你的光点"></canvas></main>
+  <div id="activity-card"><span id="activity-text"></span><button id="activity-button" type="button">进入学习活动</button></div>
+  <aside id="chat" aria-label="课堂实时聊天"><h2>💬 同学聊天室</h2><ul id="chat-messages" aria-live="polite"></ul><form id="chat-form"><input id="chat-input" maxlength="300" placeholder="发送课堂消息…" autocomplete="off" aria-label="聊天消息"><button type="submit">发送</button></form></aside>
+  <div id="mobile-controls"><span></span><button class="move-key" data-key="ArrowUp" aria-label="向上">↑</button><span></span><button class="move-key" data-key="ArrowLeft" aria-label="向左">←</button><button class="move-key" data-key="ArrowDown" aria-label="向下">↓</button><button class="move-key" data-key="ArrowRight" aria-label="向右">→</button></div>
+  <div id="help">方向键 / WASD 移动 · 靠近同学看气泡 · 右侧实时聊天 · 本课室最多 50 人</div>
+  <div id="login-overlay"><form class="login-box" id="login-form"><h2>✨ 加入虚拟课室</h2><p>输入昵称加入。课室有 50 个实时席位；在线同学可以互相聊天、看见彼此的光点。</p><input id="username-input" maxlength="20" placeholder="输入学生昵称" autocomplete="nickname" required><div id="login-error"></div><button id="start-btn" type="submit">登入课室</button></form></div>
 
-    <script>
-        (() => {
-            const canvas = document.getElementById('room-canvas');
-            const ctx = canvas.getContext('2d');
-            const overlay = document.getElementById('login-overlay');
-            const form = document.getElementById('login-form');
-            const nameInput = document.getElementById('username-input');
-            const heading = document.getElementById('room-heading');
-            const subtitle = document.getElementById('room-subtitle');
-            const leaveBtn = document.getElementById('leave-btn');
-            const params = new URLSearchParams(location.search);
-            const roomName = params.get('room') || '公共学习空间';
-            heading.textContent = roomName;
-            document.title = `${roomName} · 虚拟课室`;
-
-            const themes = [
-                { test: /华文|中文|文学/i, label: '华文 · 书香雅集', wall: '#f4e3d2', floor: '#c89b76', accent: '#a83d42', board: '#663f3c', icon: '🏮', motto: '腹有诗书气自华', greetings: ['一起读一首古诗吧！', '我正在练习成语接龙～', '这本书的故事真有趣！'] },
-                { test: /melayu|马来文|马来语/i, label: '马来文 · 热带语言花园', wall: '#f4e8c9', floor: '#b99662', accent: '#36845c', board: '#315b48', icon: '🌺', motto: 'Bahasa menyatukan kita', greetings: ['Mari belajar peribahasa!', 'Apa khabar? Jom belajar!', 'Kosa kata hari ini sudah siap.'] },
-                { test: /english|英文|英语/i, label: 'English · Creative Language Lab', wall: '#e5def5', floor: '#a992c5', accent: '#7651a5', board: '#34466b', icon: '📚', motto: 'Speak up, explore the world!', greetings: ['Would you like to practice English?', 'Let’s learn a new word!', 'Great work, keep it up!'] },
-                { test: /数学|几何|math/i, label: '数学 · 奇趣几何工坊', wall: '#e1efd5', floor: '#9ab47c', accent: '#4c8b59', board: '#315d48', icon: '📐', motto: '发现规律，解锁数字魔法', greetings: ['这道题你有思路了吗？', '一起挑战一道数学谜题吧！', '原来几何这么有趣！'] },
-                { test: /科学|实验|science/i, label: '科学 · 星球实验室', wall: '#d9edf3', floor: '#82aebb', accent: '#238bb0', board: '#285366', icon: '🧪', motto: '保持好奇，勇敢探索', greetings: ['来看看这个小实验！', '你知道星星为什么会发光吗？', '今天一起探索自然奥秘！'] },
-                { test: /校园|广场|交流|公共|学习空间/i, label: '校园 · 阳光交流广场', wall: '#d9eee8', floor: '#8eb8a9', accent: '#32a996', board: '#315e59', icon: '🌿', motto: '在这里相遇，一起成长', greetings: ['欢迎来校园广场！', '要不要一起自习？', '今天也一起加油吧！'] }
-            ];
-            const theme = themes.find(item => item.test.test(roomName)) || themes[5];
-            subtitle.textContent = `${theme.label} · 方向键移动，和同学互动`;
-
-            const world = { width: 1000, height: 620 };
-            const player = { x: 500, y: 520, radius: 11, speed: 245, name: '' };
-            const keys = new Set();
-            let active = false;
-            let lastTime = 0;
-            let scale = 1, offsetX = 0, offsetY = 0;
-            let selectedClassmate = null;
-            const desks = [
-                { x: 260, y: 220 }, { x: 420, y: 220 }, { x: 580, y: 220 }, { x: 740, y: 220 },
-                { x: 260, y: 350 }, { x: 420, y: 350 }, { x: 580, y: 350 }, { x: 740, y: 350 }
-            ];
-            const classmates = [
-                { x: 180, y: 286, name: '小语', color: '#ffb56b' }, { x: 340, y: 286, name: '星星', color: '#c4a4ff' },
-                { x: 500, y: 286, name: '阿乐', color: '#79e9d5' }, { x: 660, y: 286, name: 'Mina', color: '#ff9eb4' },
-                { x: 820, y: 286, name: 'Leo', color: '#87caff' }, { x: 180, y: 416, name: '小晴', color: '#a7ed8a' },
-                { x: 340, y: 416, name: 'Noah', color: '#7fe0ff' }, { x: 660, y: 416, name: '安安', color: '#ffd477' },
-                { x: 820, y: 416, name: 'Ayu', color: '#d3a6ff' }
-            ];
-            classmates.forEach((student, index) => student.message = theme.greetings[index % theme.greetings.length]);
-
-            const colorHex = theme.accent.replace('#', '');
-            function resize() {
-                const rect = canvas.getBoundingClientRect();
-                const dpr = Math.min(window.devicePixelRatio || 1, 2);
-                canvas.width = Math.max(1, Math.round(rect.width * dpr));
-                canvas.height = Math.max(1, Math.round(rect.height * dpr));
-                scale = Math.min(canvas.width / world.width, canvas.height / world.height);
-                offsetX = (canvas.width - world.width * scale) / 2;
-                offsetY = (canvas.height - world.height * scale) / 2;
-                draw();
-            }
-            function roundedRect(x, y, w, h, r, fill, stroke) {
-                ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fillStyle = fill; ctx.fill();
-                if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 2; ctx.stroke(); }
-            }
-            function drawThemeDecorations() {
-                ctx.save();
-                ctx.textAlign = 'center';
-                ctx.font = '26px sans-serif';
-                // Themed wall plaques make each room visually distinct.
-                ctx.fillText(theme.icon, 80, 90);
-                ctx.fillText(theme.icon, 920, 90);
-                if (/华文|中文|文学/i.test(roomName)) {
-                    ctx.strokeStyle = '#b77a5b88'; ctx.lineWidth = 3;
-                    ctx.beginPath(); ctx.moveTo(80, 170); ctx.quadraticCurveTo(150, 145, 210, 170); ctx.stroke();
-                    ctx.fillStyle = '#a83d42'; ctx.font = 'bold 16px serif'; ctx.fillText('春 · 夏 · 秋 · 冬', 145, 165);
-                } else if (/melayu|马来文|马来语/i.test(roomName)) {
-                    ctx.fillStyle = '#398b6380';
-                    for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(80 + i * 18, 175, 8, 24, -.35, 0, Math.PI * 2); ctx.fill(); }
-                    ctx.fillStyle = '#367653'; ctx.font = 'bold 15px sans-serif'; ctx.fillText('KATA · BUDAYA · ILMU', 165, 165);
-                } else if (/english|英文|英语/i.test(roomName)) {
-                    ctx.fillStyle = '#7651a5'; ctx.font = 'bold 15px sans-serif'; ctx.fillText('A · B · C', 150, 165);
-                    ctx.fillStyle = '#fff'; ctx.font = '14px sans-serif'; ctx.fillText('HELLO!', 850, 165);
-                } else if (/数学|几何|math/i.test(roomName)) {
-                    ctx.strokeStyle = '#4c8b5977'; ctx.lineWidth = 3;
-                    ctx.beginPath(); ctx.moveTo(95, 165); ctx.lineTo(120, 130); ctx.lineTo(145, 165); ctx.closePath(); ctx.stroke();
-                    ctx.beginPath(); ctx.arc(185, 148, 18, 0, Math.PI * 2); ctx.stroke();
-                    ctx.fillStyle = '#397747'; ctx.font = 'bold 14px sans-serif'; ctx.fillText('π  +  ∑  =  ?', 850, 160);
-                } else if (/科学|实验|science/i.test(roomName)) {
-                    ctx.fillStyle = '#238bb0'; ctx.font = 'bold 14px sans-serif'; ctx.fillText('H₂O · CO₂ · O₂', 160, 165);
-                    ctx.beginPath(); ctx.arc(840, 150, 18, 0, Math.PI * 2); ctx.strokeStyle = '#238bb077'; ctx.lineWidth = 3; ctx.stroke();
-                    ctx.beginPath(); ctx.arc(840, 150, 7, 0, Math.PI * 2); ctx.fillStyle = '#54c6e8'; ctx.fill();
-                } else {
-                    ctx.fillStyle = '#398a77'; ctx.font = 'bold 15px sans-serif'; ctx.fillText('一起学习 · 一起成长', 170, 165);
-                    ctx.fillText('☀', 840, 160);
-                }
-                ctx.restore();
-            }
-            function drawDesk(desk, index) {
-                ctx.fillStyle = '#09172a55'; ctx.beginPath(); ctx.ellipse(desk.x + 5, desk.y + 42, 55, 17, 0, 0, Math.PI * 2); ctx.fill();
-                roundedRect(desk.x - 42, desk.y + 18, 30, 25, 6, '#526b83', '#91abc0');
-                roundedRect(desk.x + 12, desk.y + 18, 30, 25, 6, '#526b83', '#91abc0');
-                roundedRect(desk.x - 52, desk.y - 7, 104, 45, 10, '#b78664', '#f0c99a');
-                roundedRect(desk.x - 46, desk.y - 3, 92, 33, 7, index % 2 ? '#d2a77e' : '#c69a72');
-                ctx.fillStyle = '#fff2ce'; ctx.globalAlpha = .8; ctx.fillRect(desk.x - 8, desk.y + 1, 17, 12); ctx.globalAlpha = 1;
-                ctx.fillStyle = '#243b56'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`学习桌 ${index + 1}`, desk.x, desk.y + 23);
-            }
-            function drawClassmate(student, index, time) {
-                const bob = Math.sin(time / 500 + index) * 2;
-                ctx.save();
-                ctx.fillStyle = '#10253b44'; ctx.beginPath(); ctx.ellipse(student.x, student.y + 13, 17, 7, 0, 0, Math.PI * 2); ctx.fill();
-                // Simple seated avatar: body, head, hair and a glowing status dot.
-                ctx.fillStyle = student.color; ctx.beginPath(); ctx.roundRect(student.x - 9, student.y + 1 + bob, 18, 15, 7); ctx.fill();
-                ctx.fillStyle = '#ffe0c4'; ctx.beginPath(); ctx.arc(student.x, student.y - 5 + bob, 8, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#39415c'; ctx.beginPath(); ctx.arc(student.x, student.y - 8 + bob, 8, Math.PI, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#b8ffbd'; ctx.beginPath(); ctx.arc(student.x + 9, student.y + 6 + bob, 3, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#18324b'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(student.name, student.x, student.y + 31 + bob);
-                ctx.restore();
-            }
-            function drawBubble(student, message) {
-                ctx.save(); ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
-                const text = message.length > 23 ? message.slice(0, 22) + '…' : message;
-                const width = Math.min(250, Math.max(112, ctx.measureText(text).width + 24));
-                const x = Math.max(30 + width / 2, Math.min(970 - width / 2, student.x));
-                const y = student.y - 53;
-                ctx.shadowColor = '#07152a66'; ctx.shadowBlur = 10;
-                roundedRect(x - width / 2, y - 28, width, 29, 10, '#fffdf5', '#ffffff');
-                ctx.shadowBlur = 0;
-                ctx.beginPath(); ctx.moveTo(student.x - 5, y + 1); ctx.lineTo(student.x + 5, y + 1); ctx.lineTo(student.x, y + 8); ctx.closePath(); ctx.fillStyle = '#fffdf5'; ctx.fill();
-                ctx.fillStyle = '#253c54'; ctx.fillText(text, x, y - 9, width - 16);
-                ctx.restore();
-            }
-            function draw(time = 0) {
-                if (!ctx || !canvas.width || !canvas.height) return;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.save(); ctx.translate(offsetX, offsetY); ctx.scale(scale, scale);
-                const wall = ctx.createLinearGradient(0, 30, 0, 190); wall.addColorStop(0, '#f8f8f0'); wall.addColorStop(1, theme.wall);
-                roundedRect(28, 28, 944, 564, 24, wall, '#d8edfa');
-                ctx.save(); ctx.beginPath(); ctx.roundRect(29, 29, 942, 562, 23); ctx.clip();
-                const floor = ctx.createLinearGradient(0, 185, 0, 592); floor.addColorStop(0, theme.floor); floor.addColorStop(1, '#718795');
-                ctx.fillStyle = floor; ctx.fillRect(29, 185, 942, 407);
-                ctx.fillStyle = '#ffffff30';
-                for (let y = 230; y < 590; y += 48) { ctx.fillRect(30, y, 940, 2); for (let x = (Math.floor(y / 48) % 2) * 55 + 30; x < 970; x += 110) ctx.fillRect(x, y - 46, 2, 48); }
-                // Windows and themed chalkboard.
-                roundedRect(95, 55, 190, 75, 12, '#a9e3f2', '#fff'); roundedRect(715, 55, 190, 75, 12, '#a9e3f2', '#fff');
-                ctx.strokeStyle = '#f7ffff'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(190, 56); ctx.lineTo(190, 129); ctx.moveTo(810, 56); ctx.lineTo(810, 129); ctx.stroke();
-                roundedRect(355, 52, 290, 92, 12, theme.board, '#d8c49a');
-                ctx.fillStyle = '#fff6db'; ctx.font = 'bold 20px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(roomName.length > 18 ? roomName.slice(0, 17) + '…' : roomName, 500, 94);
-                ctx.font = '13px sans-serif'; ctx.fillStyle = '#d6ecd9'; ctx.fillText(theme.motto, 500, 120);
-                drawThemeDecorations();
-                roundedRect(435, 158, 130, 28, 8, '#87664f', '#e4c49b');
-                desks.forEach(drawDesk);
-                classmates.forEach((student, index) => drawClassmate(student, index, time));
-                ctx.restore();
-                // Clicked or nearby classmate says hello in a speech bubble.
-                let speaker = selectedClassmate;
-                if (!speaker) speaker = classmates.find(student => Math.hypot(player.x - student.x, player.y - student.y) < 82) || null;
-                if (speaker) drawBubble(speaker, speaker.message);
-                // Player's luminous avatar.
-                const glow = ctx.createRadialGradient(player.x, player.y, 1, player.x, player.y, 38);
-                glow.addColorStop(0, `#${colorHex}dd`); glow.addColorStop(1, `#${colorHex}00`);
-                ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(player.x, player.y, 38, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = theme.accent; ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(player.x - 3, player.y - 4, 4, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#18324b'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`${player.name}（你）`, player.x, player.y - 23);
-                ctx.restore();
-            }
-            function collides(x, y) {
-                if (x < 75 || x > 925 || y < 190 || y > 555) return true;
-                return desks.some(desk => Math.abs(x - desk.x) < 58 && Math.abs(y - (desk.y + 8)) < 36);
-            }
-            function update(time) {
-                if (!active) return;
-                const dt = Math.min((time - (lastTime || time)) / 1000, .04); lastTime = time;
-                let dx = 0, dy = 0;
-                if (keys.has('ArrowLeft')) dx--; if (keys.has('ArrowRight')) dx++;
-                if (keys.has('ArrowUp')) dy--; if (keys.has('ArrowDown')) dy++;
-                if (dx && dy) { dx *= Math.SQRT1_2; dy *= Math.SQRT1_2; }
-                const nextX = player.x + dx * player.speed * dt, nextY = player.y + dy * player.speed * dt;
-                if (!collides(nextX, player.y)) player.x = nextX;
-                if (!collides(player.x, nextY)) player.y = nextY;
-                draw(time); requestAnimationFrame(update);
-            }
-            function keyName(key) {
-                const normalized = key.toLowerCase();
-                if (key.startsWith('Arrow')) return key;
-                return ({ w: 'ArrowUp', s: 'ArrowDown', a: 'ArrowLeft', d: 'ArrowRight' })[normalized] || key;
-            }
-            document.addEventListener('keydown', event => {
-                if (!active || event.target === nameInput) return;
-                const key = keyName(event.key);
-                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) { event.preventDefault(); keys.add(key); }
-            });
-            document.addEventListener('keyup', event => keys.delete(keyName(event.key)));
-            window.addEventListener('blur', () => keys.clear());
-            document.querySelectorAll('.move-key').forEach(button => {
-                const key = button.dataset.key;
-                button.addEventListener('pointerdown', event => { event.preventDefault(); button.setPointerCapture(event.pointerId); keys.add(key); });
-                ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => button.addEventListener(type, () => keys.delete(key)));
-            });
-            canvas.addEventListener('click', event => {
-                if (!active) return;
-                const rect = canvas.getBoundingClientRect();
-                const px = (event.clientX - rect.left) * (canvas.width / rect.width);
-                const py = (event.clientY - rect.top) * (canvas.height / rect.height);
-                const x = (px - offsetX) / scale, y = (py - offsetY) / scale;
-                const hit = classmates.find(student => Math.hypot(student.x - x, student.y - y) < 34);
-                selectedClassmate = hit || null;
-                if (hit) draw(performance.now());
-            });
-            form.addEventListener('submit', event => {
-                event.preventDefault(); player.name = nameInput.value.trim() || '同学'; active = true;
-                overlay.style.opacity = '0'; setTimeout(() => { overlay.style.display = 'none'; canvas.focus(); }, 250);
-                lastTime = 0; requestAnimationFrame(update);
-            });
-            leaveBtn.addEventListener('click', () => { location.href = 'index.html'; });
-            window.addEventListener('resize', resize);
-            resize(); nameInput.focus();
-        })();
-    </script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script>
+  (()=>{
+    // Firebase 网页配置本身不是管理员密钥；数据库访问由 database.rules.json 控制。
+    const firebaseConfig={apiKey:"AIzaSyDc9xPlyjkfo8g0HxQGvQiwlksKkOby5lg",authDomain:"cs-school-d45a3.firebaseapp.com",databaseURL:"https://cs-school-d45a3-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"cs-school-d45a3",storageBucket:"cs-school-d45a3.firebasestorage.app",messagingSenderId:"106809343013",appId:"1:106809343013:web:620ac2cee2ef8fa828d3cc",measurementId:"G-TBNSN36BSY"};
+    // 收到 Wayground 链接后由站点维护者填入；10人在线时显示活动入口。
+    const WAYGROUND_URL="";
+    const $=id=>document.getElementById(id), canvas=$('room-canvas'),ctx=canvas.getContext('2d');
+    const params=new URLSearchParams(location.search),roomName=params.get('room')||'公共学习空间';
+    $('room-heading').textContent=roomName;document.title=roomName+' · 虚拟课室';
+    const roomKey=Array.from(roomName).map(c=>c.codePointAt(0).toString(16)).join('_')||'default';
+    const themes=[
+      {re:/华文|中文|文学/i,name:'华文 · 书香课堂',wall:'#f4e3d2',floor:'#c89b76',accent:'#a83d42',board:'#663f3c',icon:'🏮',motto:'腹有诗书气自华',talk:['一起读古诗吧！','我们来玩成语接龙～','这本书真有趣！']},
+      {re:/melayu|马来文|马来语/i,name:'马来文 · 语言花园',wall:'#f4e8c9',floor:'#b99662',accent:'#36845c',board:'#315b48',icon:'🌺',motto:'Bahasa menyatukan kita',talk:['Mari belajar peribahasa!','Apa khabar? Jom belajar!','Kosa kata hari ini!']},
+      {re:/english|英文|英语/i,name:'English · Language Lab',wall:'#e5def5',floor:'#a992c5',accent:'#7651a5',board:'#34466b',icon:'📚',motto:'Speak up, explore the world!',talk:['Let’s practice English!','Learn a new word today!','Great work, keep it up!']},
+      {re:/数学|几何|math/i,name:'数学 · 几何工坊',wall:'#e1efd5',floor:'#9ab47c',accent:'#4c8b59',board:'#315d48',icon:'📐',motto:'发现规律，解锁数字魔法',talk:['这道题你有思路吗？','来挑战数学谜题吧！','几何真有趣！']},
+      {re:/科学|实验|science/i,name:'科学 · 星球实验室',wall:'#d9edf3',floor:'#82aebb',accent:'#238bb0',board:'#285366',icon:'🧪',motto:'保持好奇，勇敢探索',talk:['来看看这个小实验！','星星为什么会发光？','一起探索自然奥秘！']},
+      {re:/校园|广场|交流|公共|学习空间/i,name:'校园 · 阳光交流广场',wall:'#d9eee8',floor:'#8eb8a9',accent:'#32a996',board:'#315e59',icon:'🌿',motto:'在这里相遇，一起成长',talk:['欢迎来校园广场！','要不要一起自习？','今天也一起加油！']}
+    ];
+    const theme=themes.find(x=>x.re.test(roomName))||themes[5];$('room-subtitle').textContent=`${theme.name} · 50个在线席位`;
+    const W=1100,H=720,player={x:550,y:660,name:'',seat:-1},keys=new Set(),users=new Map(),latest=new Map(),desks=[];
+    let db=null,uid=null,joined=false,frame=0,lastSent=0,scale=1,ox=0,oy=0,onlineCount=0;
+    for(let i=0;i<50;i++){const col=i%10,row=Math.floor(i/10);desks.push({x:100+col*100,y:245+row*88,seat:i+1});}
+    const roomRef=()=>db.ref('rooms/'+roomKey),seatsRef=()=>roomRef().child('seats'),playersRef=()=>roomRef().child('players'),messagesRef=()=>roomRef().child('messages');
+    function resize(){const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.max(1,Math.round(r.width*dpr));canvas.height=Math.max(1,Math.round(r.height*dpr));scale=Math.min(canvas.width/W,canvas.height/H);ox=(canvas.width-W*scale)/2;oy=(canvas.height-H*scale)/2;draw();}
+    function round(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}}
+    function drawDesk(d){ctx.fillStyle='#182a3844';ctx.beginPath();ctx.ellipse(d.x,d.y+24,28,10,0,0,Math.PI*2);ctx.fill();round(d.x-27,d.y-12,54,30,6,'#b78664','#f0c99a');round(d.x-22,d.y-8,44,21,4,'#d2a77e');ctx.fillStyle='#3c5062';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText(String(d.seat).padStart(2,'0'),d.x,d.y+7);}
+    function drawAvatar(user,isMe,time){const bob=Math.sin(time/460+(user.seat||0))*(isMe?2:1.4),color=isMe?theme.accent:(user.color||'#68cbe5');ctx.save();ctx.fillStyle=color+'55';ctx.beginPath();ctx.arc(user.x,user.y+bob,17,0,Math.PI*2);ctx.fill();ctx.fillStyle=color;ctx.beginPath();ctx.arc(user.x,user.y+bob,8,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(user.x-2,user.y-2+bob,3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#152a40';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText((user.name||'同学').slice(0,10)+(isMe?'（你）':''),user.x,user.y-14+bob);ctx.restore();}
+    function bubble(x,y,text){ctx.save();ctx.font='12px sans-serif';const t=text.length>25?text.slice(0,24)+'…':text,w=Math.min(240,Math.max(100,ctx.measureText(t).width+18));round(Math.max(32,Math.min(W-w-32,x-w/2)),y-45,w,25,9,'#fffdf4','#fff');ctx.fillStyle='#243b50';ctx.textAlign='center';ctx.fillText(t,Math.max(32+w/2,Math.min(W-32-w/2,x)),y-29,w-12);ctx.restore();}
+    function draw(time=performance.now()){if(!ctx||!canvas.width)return;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);
+      const wall=ctx.createLinearGradient(0,20,0,H);wall.addColorStop(0,'#fbfaf3');wall.addColorStop(.26,theme.wall);wall.addColorStop(1,theme.floor);round(24,22,W-48,H-44,22,wall,'#d8edfa');ctx.save();ctx.beginPath();ctx.roundRect(25,23,W-50,H-46,21);ctx.clip();ctx.fillStyle='#ffffff22';for(let y=230;y<H;y+=45){ctx.fillRect(25,y,W-50,2);for(let x=45+(Math.floor(y/45)%2)*40;x<W;x+=80)ctx.fillRect(x,y-43,2,43);}round(400,55,300,100,12,theme.board,'#d8c49a');ctx.fillStyle='#fff6db';ctx.textAlign='center';ctx.font='bold 21px sans-serif';ctx.fillText(roomName.length>22?roomName.slice(0,21)+'…':roomName,550,98);ctx.font='14px sans-serif';ctx.fillText(theme.motto,550,128);ctx.font='26px sans-serif';ctx.fillText(theme.icon,90,100);ctx.fillText(theme.icon,1010,100);round(485,170,130,30,7,'#87664f','#e4c49b');desks.forEach(drawDesk);ctx.restore();
+      for(const d of desks){const person=users.get(String(d.seat));if(person)drawAvatar(person,person.uid===uid,time);else{ctx.fillStyle='#a8bac744';ctx.beginPath();ctx.ellipse(d.x,d.y+38,12,5,0,0,Math.PI*2);ctx.fill();}}
+      const current=users.get(String(player.seat));if(joined&&current)drawAvatar({...current,x:player.x,y:player.y,name:player.name,seat:player.seat},true,time);
+      const now=Date.now();for(const [userId,item] of latest){const person=[...users.values()].find(x=>x.uid===userId);if(person&&now-item.time<12000)bubble(person.x,person.y,item.text);}
+      if(joined&&current){const near=[...users.values()].find(p=>p.uid!==uid&&Math.hypot(p.x-player.x,p.y-player.y)<70);if(near&&!latest.has(near.uid))bubble(near.x,near.y,theme.talk[(near.seat||0)%theme.talk.length]);}
+      ctx.restore();}
+    function updateCounter(snapshot){onlineCount=snapshot.numChildren();$('counter').textContent=`🟢 在线 ${onlineCount} / 50 人 · 座位 ${player.seat+1}`;const card=$('activity-card');if(onlineCount>=10){card.classList.add('ready');$('activity-text').textContent=WAYGROUND_URL?`已达10人，学习活动可以开始（${onlineCount}人在线）`:`已达10人（${onlineCount}人在线）；请管理员配置 Wayground 链接`;$('activity-button').hidden=!WAYGROUND_URL;}else{card.classList.remove('ready');}}
+    function showError(text){$('login-error').textContent=text;}
+    async function reserveSeat(name){const snapshot=await seatsRef().once('value');let found=null;snapshot.forEach(child=>{if(child.val()&&child.val().uid===uid)found=Number(child.key);});if(found!==null)return found;
+      for(let n=1;n<=50;n++){const ref=seatsRef().child(String(n));let result;try{result=await ref.transaction(old=>old===null?{uid,name,joinedAt:firebase.database.ServerValue.TIMESTAMP}:undefined,false);}catch(e){continue;}if(result.committed&&result.snapshot.val().uid===uid)return n;}return -1;}
+    async function join(name){$('start-btn').disabled=true;showError('��在连接课室…');try{const credential=await firebase.auth().signInAnonymously();uid=credential.user.uid;const seat=await reserveSeat(name);if(seat<0)throw new Error('课室已满（50/50），暂时没有空位。');player.seat=seat-1;player.name=name;const d=desks[player.seat];player.x=d.x;player.y=d.y+40;const pRef=playersRef().child(uid),sRef=seatsRef().child(String(seat));await Promise.all([pRef.onDisconnect().remove(),sRef.onDisconnect().remove()]);await sRef.update({uid,name,joinedAt:firebase.database.ServerValue.TIMESTAMP});await pRef.set({uid,name,seat,x:player.x,y:player.y,color:theme.accent,updatedAt:firebase.database.ServerValue.TIMESTAMP});joined=true;$('login-overlay').style.display='none';canvas.focus();sRef.onDisconnect().remove();pRef.onDisconnect().remove();seatsRef().on('value',updateCounter);playersRef().on('value',snap=>{users.clear();snap.forEach(ch=>{const p=ch.val();if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y))users.set(String(p.seat),p);});draw();});messagesRef().limitToLast(40).on('child_added',snap=>{const m=snap.val();if(!m)return;latest.set(m.uid,{text:m.text,time:m.createdAt||Date.now()});const li=document.createElement('li'),strong=document.createElement('strong'),text=document.createTextNode(m.text),time=document.createElement('time');strong.textContent=m.name||'同学';time.textContent=new Date(m.createdAt||Date.now()).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});li.append(strong,text,time);$('chat-messages').append(li);while($('chat-messages').children.length>40)$('chat-messages').firstElementChild.remove();$('chat-messages').scrollTop=$('chat-messages').scrollHeight;});requestAnimationFrame(loop);showError('');}catch(e){showError(e.message||'连接失败，请检查 Firebase 登录方式和数据库规则。');$('start-btn').disabled=false;}}
+    function loop(time){if(!joined)return;let dt=Math.min((time-(loop.last||time))/1000,.04);loop.last=time;let dx=0,dy=0;if(keys.has('ArrowLeft'))dx--;if(keys.has('ArrowRight'))dx++;if(keys.has('ArrowUp'))dy--;if(keys.has('ArrowDown'))dy++;if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}player.x=Math.max(45,Math.min(W-45,player.x+dx*220*dt));player.y=Math.max(205,Math.min(H-55,player.y+dy*220*dt));draw(time);if(Date.now()-lastSent>160&&(dx||dy)){lastSent=Date.now();playersRef().child(uid).update({x:player.x,y:player.y,updatedAt:firebase.database.ServerValue.TIMESTAMP}).catch(()=>{});}requestAnimationFrame(loop);}
+    function normKey(key){if(key.startsWith('Arrow'))return key;return({w:'ArrowUp',s:'ArrowDown',a:'ArrowLeft',d:'ArrowRight'})[key.toLowerCase()]||key;}
+    document.addEventListener('keydown',e=>{const k=normKey(e.key);if(joined&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(k)){e.preventDefault();keys.add(k);}});document.addEventListener('keyup',e=>keys.delete(normKey(e.key)));window.addEventListener('blur',()=>keys.clear());
+    document.querySelectorAll('.move-key').forEach(b=>{const k=b.dataset.key;b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(k);});['pointerup','pointercancel','lostpointercapture'].forEach(t=>b.addEventListener(t,()=>keys.delete(k)));});
+    $('login-form').addEventListener('submit',e=>{e.preventDefault();const name=$('username-input').value.trim();if(name)join(name);});
+    $('chat-form').addEventListener('submit',async e=>{e.preventDefault();if(!joined)return;const input=$('chat-input'),text=input.value.trim();if(!text)return;input.value='';try{await messagesRef().push({uid,name:player.name,text,createdAt:firebase.database.ServerValue.TIMESTAMP});}catch(err){input.value=text;alert('消息发送失败，请检查数据库规则或网络连接。');}});
+    $('activity-button').addEventListener('click',()=>{if(WAYGROUND_URL&&onlineCount>=10)window.open(WAYGROUND_URL,'_blank','noopener,noreferrer');});
+    $('leave-btn').addEventListener('click',async()=>{if(joined){joined=false;try{await Promise.all([playersRef().child(uid).remove(),seatsRef().child(String(player.seat+1)).remove()]);}catch(e){}}location.href='index.html';});
+    window.addEventListener('resize',resize);
+    try{firebase.initializeApp(firebaseConfig);db=firebase.database();resize();}catch(e){showError('Firebase 初始化失败，请检查配置。');$('start-btn').disabled=true;}
+  })();
+  </script>
 </body>
 </html>

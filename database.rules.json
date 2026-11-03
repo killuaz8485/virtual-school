@@ -1,0 +1,29 @@
+{
+  "rules": {
+    "rooms": {
+      "$room": {
+        "seats": {
+          ".read": "auth != null",
+          "$seat": {
+            ".write": "auth != null && (!data.exists() || data.child('uid').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['uid', 'name']) && newData.child('uid').val() === auth.uid && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 20"
+          }
+        },
+        "players": {
+          ".read": "auth != null",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.hasChildren(['uid', 'name', 'seat', 'x', 'y']) && newData.child('uid').val() === auth.uid && newData.child('name').isString() && newData.child('name').val().length <= 20 && newData.child('seat').isNumber() && newData.child('seat').val() >= 1 && newData.child('seat').val() <= 50 && newData.child('x').isNumber() && newData.child('x').val() >= 0 && newData.child('x').val() <= 1100 && newData.child('y').isNumber() && newData.child('y').val() >= 0 && newData.child('y').val() <= 720"
+          }
+        },
+        "messages": {
+          ".read": "auth != null",
+          "$messageId": {
+            ".write": "auth != null && !data.exists()",
+            ".validate": "newData.hasChildren(['uid', 'name', 'text', 'createdAt']) && newData.child('uid').val() === auth.uid && newData.child('name').isString() && newData.child('name').val().length <= 20 && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 300 && newData.child('createdAt').isNumber()"
+          }
+        }
+      }
+    }
+  }
+}
