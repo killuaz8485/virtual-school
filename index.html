@@ -187,9 +187,9 @@
             descEl.textContent = desc;
             card.classList.add('active');
             card.setAttribute('aria-hidden', 'false');
-            enterBtn.onclick = () => alert(`正在带你化身数字分身，进入【${name}】的50人模拟课室...`);
+            enterBtn.onclick = function() {window.location.href = `classroom.html?room=${encodeURIComponent(name)}`;
+};
         }
-
         function activateIsland(event, name, desc) {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
