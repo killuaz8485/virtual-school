@@ -187,7 +187,7 @@
             descEl.textContent = desc;
             card.classList.add('active');
             card.setAttribute('aria-hidden', 'false');
-            enterBtn.onclick = function() {window.location.href = `classroom.html?room=${encodeURIComponent(name)}`;
+            enterBtn.onclick = function() {window.location.href = `classroom.html?room=${encodeURIComponent(name)}&t=${Date.now()}`;
         }
         function activateIsland(event, name, desc) {
             if (event.key === 'Enter' || event.key === ' ') {
