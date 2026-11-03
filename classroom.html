@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虚拟多人口堂 - 陪伴空间</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #0b0c10; font-family: sans-serif; }
+        
+        /* 登录弹窗 */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 12, 16, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.5s; }
+        .login-box { background: #1f2833; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; width: 80%; max-width: 320px; border: 1px solid #45f3ff; }
+        .login-box h2 { color: #45f3ff; margin-top: 0; font-size: 20px; }
+        .login-box p { color: #c5a880; font-size: 13px; line-height: 1.4; margin-bottom: 20px; }
+        .login-box input { width: 90%; padding: 12px; border-radius: 25px; border: none; background: #0b0c10; color: white; text-align: center; font-size: 16px; margin-bottom: 20px; outline: none; border: 1px solid #1f2833; }
+        .login-box input:focus { border-color: #45f3ff; }
+        .login-box button { background: linear-gradient(45deg, #00bbf9, #00f5d4); color: #0b0c10; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%; }
+        
+        /* 课室 UI 界面 */
+        #room-ui { position: absolute; top: 20px; left: 20px; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.8); pointer-events: none; z-index: 10; }
+        #room-ui h1 { margin: 0; font-size: 18px; color: #45f3ff; }
+        #counter { background: rgba(69, 243, 255, 0.2); padding: 4px 10px; border-radius: 10px; font-size: 12px; display: inline-block; margin-top: 5px; border: 1px solid rgba(69, 243, 255, 0.4); }
+        
+        /* 底部互动区 */
+        #footer-bar { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10; width: 90%; max-width: 400px; }
+        #status-txt { background: rgba(255,255,255,0.9); padding: 12px; border-radius: 25px; font-size: 14px; text-align: center; flex-grow: 1; font-weight: bold; color: #1f2833; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        #exit-btn { background: #e43f5a; color: white; border: none; border-radius: 25px; padding: 0 20px; font-weight: bold; cursor: pointer; }
+        
+        /* 课室舞台画布 */
+        canvas { width: 100%; height: 100%; display: block; }
+    </style>
+    <script src="https://cloudflare.com"></script>
+</head>
+<body>
+
+    <!-- 1. 自拟名字登入弹窗 -->
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>🎒 化身数字学生</h2>
+            <p>参考韩国《山寺》冥想概念：在这里，你可以放下压力，与全马各地的在线同学静静在云端课室相伴学习。</p>
+            <input type="text" id="username-input" placeholder="输入你想用的学生昵称..." maxlength="10">
+            <button onclick="enterClassroom()">化身登入课室</button>
+        </div>
+    </div>
+
+    <!-- 2. 课室内部界面 -->
+    <div id="room-ui">
+        <h1 id="room-title">加载中...</h1>
+        <div id="counter">🟢 当前课室在学：<span id="user-count">38</span> / 50 人</div>
+    </div>
+
+    <div id="footer-bar">
+        <div id="status-txt">准备入座...</div>
+        <button id="exit-btn" onclick="window.location.href='index.html'">离开</button>
+    </div>
+
+    <script>
+        let currentUserName = "";
+        
+        // 获取网址传过来的房间参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomName = urlParams.get('room') || '公共学习空间';
+        document.getElementById('room-title').innerText = roomName;
+
+        // 随机在学人数（模拟50人房间）
+        document.getElementById('user-count').innerText = Math.floor(Math.random() * 15) + 30;
+
+        function enterClassroom() {
+            const input = document.getElementById('username-input').value.trim();
+            if (input === "") {
+                alert("请先帮你的虚拟分身取一个名字吧！");
+                return;
+            }
+            currentUserName = input;
+            document.getElementById('login-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('status-txt').innerText = `✨ 学生【${currentUserName}】已在教室蒲团入座`;
+                init3DScene();
+            }, 500);
+        }
+
+        // 3. 渲染唯美《山寺》风 3D 陪伴场景
+        function init3DScene() {
+            const scene = new THREE.Scene();
+            // 深邃夜空背景
+            scene.background = new THREE.Color(0x0b0c10);
+            scene.fog = new THREE.FogExp2(0x0b0c10, 0.05);
+
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 3, 10);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // 光影营造禅意氛围
+            const ambientLight = new THREE.AmbientLight(0x1a237e, 1.5);
+            scene.add(ambientLight);
+            
+            const centerLight = new THREE.PointLight(0x45f3ff, 2, 20);
+            centerLight.position.set(0, 2, 0);
+            scene.add(centerLight);
+
+            // 绘制教室地板（圆形的冥想广场）
+            const floorGeo = new THREE.CylinderGeometry(8, 8, 0.2, 32);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x1f2833, roughness: 0.8 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.position.y = -0.1;
+            scene.add(floor);
+
+            // 生成聚集在一起的陪伴分身（发光的几何体模拟山寺小沙弥/发光能量体）
+            const studentMeshes = [];
+            const count = 35; // 模拟三十多个同学在座
+            
+            for (let i = 0; i < count; i++) {
+                // 圆滚滚的轻量分身模型
+                const geo = new THREE.SphereGeometry(0.3, 16, 16);
+                // 错落有致的温暖荧光
+                const mat = new THREE.MeshStandardMaterial({
+                    color: i === 0 ? 0x45f3ff : (Math.random() > 0.5 ? 0xff9f43 : 0x00f5d4),
+                    emissive: i === 0 ? 0x00bbf9 : 0x000000,
+                    roughness: 0.2
+                });
+                const mesh = new THREE.Mesh(geo, mat);
+                
+                // 让大家环绕在教室中心坐下
+                const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5;
+                const radius = 2 + Math.random() * 4;
+                mesh.position.set(Math.cos(angle) * radius, 0.3, Math.sin(angle) * radius);
+                
+                scene.add(mesh);
+                studentMeshes.push(mesh);
+            }
+
+            // 环绕镜头动画，产生唯美静谧的3D空间感
+            let angle = 0;
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // 镜头缓缓围绕教室自转，还原《山寺》全景沉浸体验
+                angle += 0.002;
+                camera.position.x = Math.cos(angle) * 11;
+                camera.position.z = Math.sin(angle) * 11;
+                camera.lookAt(0, 1, 0);
+
+                // 让所有在座的分身微微像呼吸一样上下浮动
+                const time = Date.now() * 0.002;
+                studentMeshes.forEach((mesh, idx) => {
+                    mesh.position.y = 0.3 + Math.sin(time + idx) * 0.05;
+                });
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // 屏幕自适应
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+    </script>
+</body>
+</html>
