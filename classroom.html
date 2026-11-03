@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>虚拟多人口堂 - 陪伴空间</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #0b0c10; font-family: sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #0b0c10; font-family: sans-serif; display: flex; align-items: center; justify-content: center; }
+        
+        /* 唯美星空背景与氛围 */
+        .universe { position: absolute; width: 100%; height: 100%; background: radial-gradient(circle at center, #1f2833 0%, #0b0c10 80%); z-index: 1; overflow: hidden; }
         
         /* 登录弹窗 */
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 12, 16, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; transition: opacity 0.5s; }
@@ -26,18 +29,38 @@
         #status-txt { background: rgba(255,255,255,0.9); padding: 12px; border-radius: 25px; font-size: 14px; text-align: center; flex-grow: 1; font-weight: bold; color: #1f2833; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         #exit-btn { background: #e43f5a; color: white; border: none; border-radius: 25px; padding: 0 20px; font-weight: bold; cursor: pointer; }
         
-        /* 课室舞台画布 */
-        canvas { width: 100%; height: 100%; display: block; }
+        /* 仿《山寺》唯美连线与陪伴席位 */
+        .classroom-stage { position: relative; width: 90vw; height: 50vh; z-index: 2; overflow: visible; display: flex; justify-content: center; align-items: center; }
+        svg { width: 100%; height: 100%; overflow: visible; }
+        
+        /* 呼吸小沙弥/学生分身的动画 */
+        .student-avatar { animation: breathe 3s ease-in-out infinite; transform-origin: center; filter: drop-shadow(0 0 8px var(--glow-color)); }
+        .student-avatar:nth-child(2n) { animation-delay: -0.7s; }
+        .student-avatar:nth-child(3n) { animation-delay: -1.4s; }
+        .student-avatar:nth-child(4n) { animation-delay: -2.1s; }
+        
+        @keyframes breathe {
+            0%, 100% { transform: translateY(0px) scale(1); opacity: 0.7; }
+            50% { transform: translateY(-6px) scale(1.05); opacity: 1; }
+        }
+        
+        /* 教室中心的聚集线 */
+        .center-glow { animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
     </style>
-    <script src="https://cloudflare.com"></script>
 </head>
 <body>
+
+    <div class="universe"></div>
 
     <!-- 1. 自拟名字登入弹窗 -->
     <div id="login-overlay">
         <div class="login-box">
             <h2>🎒 化身数字学生</h2>
-            <p>参考韩国《山寺》冥想概念：在这里，你可以放下压力，与全马各地的在线同学静静在云端课室相伴学习。</p>
+            <p>参考韩国《山寺》冥想概念：在这里，你可以放下压力，与在线同学静静在云端课室相伴学习。</p>
             <input type="text" id="username-input" placeholder="输入你想用的学生昵称..." maxlength="10">
             <button onclick="enterClassroom()">化身登入课室</button>
         </div>
@@ -46,7 +69,19 @@
     <!-- 2. 课室内部界面 -->
     <div id="room-ui">
         <h1 id="room-title">加载中...</h1>
-        <div id="counter">🟢 当前课室在学：<span id="user-count">38</span> / 50 人</div>
+        <div id="counter">🟢 当前课室在学...</div>
+    </div>
+
+    <!-- 3. 原生全动态陪伴画面 -->
+    <div class="classroom-stage" id="stage" style="display:none;">
+        <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
+            <!-- 教室中心的能量核心/讲台光晕 -->
+            <circle cx="200" cy="150" r="15" fill="#45f3ff" class="center-glow" filter="blur(5px)" style="opacity:0.5;"/>
+            <circle cx="200" cy="150" r="5" fill="#ffffff"/>
+            
+            <!-- 环绕的陪伴学生席位群 (动态生成) -->
+            <g id="students-group"></g>
+        </svg>
     </div>
 
     <div id="footer-bar">
@@ -57,13 +92,14 @@
     <script>
         let currentUserName = "";
         
-        // 获取网址传过来的房间参数
+        // 获取页面参数
         const urlParams = new URLSearchParams(window.location.search);
         const roomName = urlParams.get('room') || '公共学习空间';
         document.getElementById('room-title').innerText = roomName;
 
-        // 随机在学人数（模拟50人房间）
-        document.getElementById('user-count').innerText = Math.floor(Math.random() * 15) + 30;
+        // 随机在线人数
+        const randomCount = Math.floor(Math.random() * 15) + 32;
+        document.getElementById('counter').innerHTML = `🟢 当前课室在学：<span>${randomCount}</span> / 50 人`;
 
         function enterClassroom() {
             const input = document.getElementById('username-input').value.trim();
@@ -76,90 +112,59 @@
             setTimeout(() => {
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('status-txt').innerText = `✨ 学生【${currentUserName}】已在教室蒲团入座`;
-                init3DScene();
+                document.getElementById('stage').style.display = 'flex';
+                generateClassroomSeats();
             }, 500);
         }
 
-        // 3. 渲染唯美《山寺》风 3D 陪伴场景
-        function init3DScene() {
-            const scene = new THREE.Scene();
-            // 深邃夜空背景
-            scene.background = new THREE.Color(0x0b0c10);
-            scene.fog = new THREE.FogExp2(0x0b0c10, 0.05);
+        // 动态生成仿《山寺》的环绕陪伴星光阵
+        function generateClassroomSeats() {
+            const group = document.getElementById('students-group');
+            let htmlContent = "";
 
-            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 3, 10);
-
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-
-            // 光影营造禅意氛围
-            const ambientLight = new THREE.AmbientLight(0x1a237e, 1.5);
-            scene.add(ambientLight);
-            
-            const centerLight = new THREE.PointLight(0x45f3ff, 2, 20);
-            centerLight.position.set(0, 2, 0);
-            scene.add(centerLight);
-
-            // 绘制教室地板（圆形的冥想广场）
-            const floorGeo = new THREE.CylinderGeometry(8, 8, 0.2, 32);
-            const floorMat = new THREE.MeshStandardMaterial({ color: 0x1f2833, roughness: 0.8 });
-            const floor = new THREE.Mesh(floorGeo, floorMat);
-            floor.position.y = -0.1;
-            scene.add(floor);
-
-            // 生成聚集在一起的陪伴分身（发光的几何体模拟山寺小沙弥/发光能量体）
-            const studentMeshes = [];
-            const count = 35; // 模拟三十多个同学在座
-            
-            for (let i = 0; i < count; i++) {
-                // 圆滚滚的轻量分身模型
-                const geo = new THREE.SphereGeometry(0.3, 16, 16);
-                // 错落有致的温暖荧光
-                const mat = new THREE.MeshStandardMaterial({
-                    color: i === 0 ? 0x45f3ff : (Math.random() > 0.5 ? 0xff9f43 : 0x00f5d4),
-                    emissive: i === 0 ? 0x00bbf9 : 0x000000,
-                    roughness: 0.2
-                });
-                const mesh = new THREE.Mesh(geo, mat);
+            // 1. 先生成30多个其他同学的陪伴荧光分身
+            for (let i = 0; i < randomCount - 1; i++) {
+                const angle = (i / (randomCount - 1)) * Math.PI * 2 + Math.random() * 0.4;
+                const radius = 50 + Math.random() * 70; // 错落环绕在中心周围
+                const cx = 200 + Math.cos(angle) * radius;
+                const cy = 150 + Math.sin(angle) * radius;
                 
-                // 让大家环绕在教室中心坐下
-                const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5;
-                const radius = 2 + Math.random() * 4;
-                mesh.position.set(Math.cos(angle) * radius, 0.3, Math.sin(angle) * radius);
+                // 随机温暖色调（暖橙、青绿、浅紫）
+                const colors = ["#ff9f43", "#00f5d4", "#9b5de5", "#00bbf9"];
+                const color = colors[Math.floor(Math.random() * colors.length)];
                 
-                scene.add(mesh);
-                studentMeshes.push(mesh);
+                htmlContent += `
+                    <g class="student-avatar" style="--glow-color: ${color};">
+                        <!-- 连向中心的静谧陪伴线 -->
+                        <line x1="200" y1="150" x2="${cx}" y2="${cy}" stroke="${color}" stroke-width="0.5" opacity="0.15" stroke-dasharray="2,4" />
+                        <!-- 蒲团垫 -->
+                        <ellipse cx="${cx}" cy="${cy+6}" rx="10" ry="4" fill="rgba(255,255,255,0.05)" />
+                        <!-- 呼吸能量球/学生代表 -->
+                        <circle cx="${cx}" cy="${cy}" r="5" fill="${color}" />
+                        <circle cx="${cx}" cy="${cy}" r="2" fill="#fff" opacity="0.6"/>
+                    </g>
+                `;
             }
 
-            // 环绕镜头动画，产生唯美静谧的3D空间感
-            let angle = 0;
-            function animate() {
-                requestAnimationFrame(animate);
-                
-                // 镜头缓缓围绕教室自转，还原《山寺》全景沉浸体验
-                angle += 0.002;
-                camera.position.x = Math.cos(angle) * 11;
-                camera.position.z = Math.sin(angle) * 11;
-                camera.lookAt(0, 1, 0);
+            // 2. 在正前方最显眼的位置，生成“你（静静）”的专属高亮分身
+            const myAngle = Math.PI * 0.5; // 放在正下方中央偏前
+            const myRadius = 45;
+            const myCx = 200 + Math.cos(myAngle) * myRadius;
+            const myCy = 150 + Math.sin(myAngle) * myRadius;
+            
+            htmlContent += `
+                <g class="student-avatar" style="--glow-color: #45f3ff; transform: scale(1.2);">
+                    <line x1="200" y1="150" x2="${myCx}" y2="${myCy}" stroke="#45f3ff" stroke-width="1" opacity="0.4" />
+                    <ellipse cx="${myCx}" cy="${myCy+8}" rx="14" ry="5" fill="rgba(69, 243, 255, 0.2)" stroke="#45f3ff" stroke-width="0.5" />
+                    <!-- 你的主透光能量球 -->
+                    <circle cx="${myCx}" cy="${myCy}" r="7" fill="#45f3ff" />
+                    <circle cx="${myCx}" cy="${myCy}" r="3" fill="#fff" />
+                    <!-- 你的名字标签 -->
+                    <text x="${myCx}" y="${myCy - 12}" fill="#45f3ff" font-size="9" font-weight="bold" text-anchor="middle" bgcolor="#000">${currentUserName} (你)</text>
+                </g>
+            `;
 
-                // 让所有在座的分身微微像呼吸一样上下浮动
-                const time = Date.now() * 0.002;
-                studentMeshes.forEach((mesh, idx) => {
-                    mesh.position.y = 0.3 + Math.sin(time + idx) * 0.05;
-                });
-
-                renderer.render(scene, camera);
-            }
-            animate();
-
-            // 屏幕自适应
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
+            group.innerHTML = htmlContent;
         }
     </script>
 </body>
