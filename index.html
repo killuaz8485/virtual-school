@@ -3,101 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虚拟学校 3D 岛屿空间</title>
+    <meta name="theme-color" content="#071b3a">
+    <title>虚拟学校 · 云端岛屿地图</title>
     <style>
-        body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
-        #title { position: absolute; top: 20px; text-align: center; color: white; font-size: 22px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 2px; }
-        
-        .map-container { width: 100vw; height: 65vh; display: flex; justify-content: center; align-items: center; }
+        :root { color-scheme: dark; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; overflow: hidden; color: #fff;
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: radial-gradient(ellipse at 50% 45%, #174d79 0%, #0c2d54 45%, #07172f 100%);
+        }
+        body::before, body::after {
+            content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1;
+        }
+        body::before {
+            opacity: .42;
+            background-image: radial-gradient(1px 1px at 8% 18%, #d7f5ff 99%, transparent),
+                radial-gradient(2px 2px at 82% 14%, #fff 99%, transparent),
+                radial-gradient(1px 1px at 72% 78%, #b8eaff 99%, transparent),
+                radial-gradient(2px 2px at 17% 72%, #fff 99%, transparent),
+                radial-gradient(1px 1px at 91% 52%, #d7f5ff 99%, transparent);
+            background-size: 260px 220px, 360px 300px, 310px 280px, 400px 350px, 280px 260px;
+        }
+        body::after {
+            background: linear-gradient(180deg, rgba(5, 17, 39, .16), transparent 35%, rgba(3, 15, 35, .28));
+        }
+        #title { position: absolute; z-index: 2; top: 24px; width: 100%; text-align: center; }
+        #title strong { display: block; font-size: clamp(20px, 4vw, 29px); letter-spacing: 3px; text-shadow: 0 3px 14px #06152b; }
+        #title span { display: block; margin-top: 7px; color: #a9d8f6; font-size: 12px; letter-spacing: 4px; }
+        .map-container { width: min(100vw, 900px); height: min(76vh, 690px); position: absolute; left: 50%; top: 49%; transform: translate(-50%, -50%); }
         svg { width: 100%; height: 100%; overflow: visible; }
-        
-        .island { cursor: pointer; transition: transform 0.3s ease; animation: float 4s ease-in-out infinite; }
-        .island:nth-child(1) { animation-delay: 0s; }
-        .island:nth-child(2) { animation-delay: -0.6s; }
-        .island:nth-child(3) { animation-delay: -1.2s; }
-        .island:nth-child(4) { animation-delay: -1.8s; }
-        .island:nth-child(5) { animation-delay: -2.4s; }
-        .island:nth-child(6) { animation-delay: -3.0s; }
-        
-        .island:hover, .island:active { transform: scale(1.08) translateY(-8px) !important; filter: brightness(1.15); }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-        }
-
+        .ocean-ring { fill: none; stroke: #66d8ff; stroke-width: 1; opacity: .16; stroke-dasharray: 4 9; }
+        .route { fill: none; stroke: #b7eeff; stroke-width: 2; stroke-dasharray: 3 8; opacity: .58; }
+        .route-dot { fill: #fff3a6; filter: url(#glow); }
+        .cloud { fill: #c9efff; opacity: .58; filter: url(#softShadow); animation: cloud-drift 8s ease-in-out infinite alternate; }
+        .cloud.two { animation-delay: -4s; }
+        .island { cursor: pointer; transform-box: fill-box; transform-origin: center; animation: float 4.5s ease-in-out infinite; transition: filter .25s ease; outline: none; }
+        .island:nth-of-type(2) { animation-delay: -.6s; }
+        .island:nth-of-type(3) { animation-delay: -1.2s; }
+        .island:nth-of-type(4) { animation-delay: -1.8s; }
+        .island:nth-of-type(5) { animation-delay: -2.4s; }
+        .island:nth-of-type(6) { animation-delay: -3s; }
+        .island:hover, .island:focus-visible { filter: brightness(1.16) drop-shadow(0 10px 10px rgba(0,0,0,.25)); animation-play-state: paused; transform: translateY(-7px) scale(1.045); }
+        .island:focus-visible .island-top { stroke: #fff7b0; stroke-width: 3; }
+        .island-top { stroke-width: 2; }
+        .island-label { font-size: 12px; font-weight: 800; text-anchor: middle; paint-order: stroke; stroke: rgba(15,35,55,.16); stroke-width: 2px; }
+        .small-label { font-size: 8px; font-weight: 700; fill: #effaff; letter-spacing: 1px; text-anchor: middle; }
+        .building { stroke: rgba(40,55,73,.3); stroke-width: 1; }
+        .window { fill: #fff3b0; opacity: .9; }
+        .tree-top { stroke: rgba(18,70,54,.36); stroke-width: 1; }
+        .map-caption { position: absolute; bottom: 17%; left: 50%; transform: translateX(-50%); color: rgba(203,238,255,.7); font-size: 10px; letter-spacing: 3px; white-space: nowrap; }
         #info-card {
-            position: absolute; bottom: 30px; background: rgba(255, 255, 255, 0.95); 
-            padding: 15px 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            text-align: center; width: 85%; max-width: 320px; transition: all 0.3s ease; 
-            opacity: 0; transform: translateY(20px); pointer-events: none;
+            position: absolute; z-index: 5; left: 50%; bottom: 24px; transform: translate(-50%, 24px);
+            width: min(88vw, 370px); padding: 18px 22px 16px; border: 1px solid rgba(255,255,255,.55);
+            border-radius: 20px; color: #243650; text-align: center;
+            background: linear-gradient(145deg, rgba(255,255,255,.97), rgba(226,245,255,.94));
+            box-shadow: 0 14px 45px rgba(0,0,0,.35), inset 0 1px 0 #fff;
+            opacity: 0; pointer-events: none; transition: opacity .3s ease, transform .3s ease;
         }
-        #info-card.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        #info-card h2 { margin: 0 0 8px 0; color: #162447; font-size: 18px; }
-        #info-card p { margin: 0 0 12px 0; color: #444; font-size: 14px; line-height: 1.4; }
-        #info-card button { background: #e43f5a; color: white; border: none; padding: 6px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; width: 100%; }
+        #info-card.active { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+        #info-card h2 { margin: 0 0 7px; color: #142c4c; font-size: 18px; }
+        #info-card p { margin: 0 0 13px; color: #52657b; font-size: 13px; line-height: 1.55; }
+        #enter-btn { width: 100%; border: 0; border-radius: 24px; padding: 10px 16px; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; background: linear-gradient(100deg, #ed536d, #f27b57); box-shadow: 0 5px 14px rgba(225,74,95,.28); }
+        #enter-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        #enter-btn:focus-visible { outline: 3px solid #183d68; outline-offset: 3px; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes cloud-drift { from { transform: translateX(-5px); } to { transform: translateX(8px); } }
+        @media (max-height: 650px) { #title { top: 10px; } .map-container { height: 78vh; top: 48%; } #info-card { bottom: 10px; padding: 12px 18px; } }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
     </style>
 </head>
 <body>
-    <div id="title">🏫 虚拟学校 · 3D 空间</div>
+    <header id="title"><strong>🏫 虚拟学校 · 云端岛屿</strong><span>VIRTUAL CAMPUS · EXPLORE & LEARN</span></header>
 
-    <div class="map-container">
-        <svg viewBox="0 0 500 450" preserveAspectRatio="xMidYMid meet">
-            <!-- 1. 华文岛 (左上) -->
-            <g class="island" onclick="showIsland('1. 华文空间 🏮', '沉浸式中华文化体验，包含水墨互动、经典文学朗诵与趣味成语接龙，让文字活起来。')">
-                <polygon points="100,140 150,110 200,140 200,180 150,210 100,180" fill="#de4436" stroke="#b22f24" stroke-width="2"/>
-                <polygon points="100,180 150,210 150,225 100,195" fill="#b22f24"/>
-                <polygon points="200,180 150,210 150,225 200,195" fill="#8a2017"/>
-                <text x="150" y="165" fill="white" font-size="13" font-weight="bold" text-anchor="middle">华文</text>
+    <main class="map-container" aria-label="虚拟学校岛屿地图">
+        <svg viewBox="0 0 500 450" role="img" aria-labelledby="map-title map-desc" preserveAspectRatio="xMidYMid meet">
+            <title id="map-title">虚拟学校 3D 岛屿地图</title>
+            <desc id="map-desc">六座学科与校园主题岛屿漂浮在海面上，点击岛屿查看介绍。</desc>
+            <defs>
+                <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#1a6a91" stop-opacity=".32"/><stop offset="1" stop-color="#082a52" stop-opacity=".08"/></linearGradient>
+                <linearGradient id="grass" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#a9e77c"/><stop offset="1" stop-color="#55b987"/></linearGradient>
+                <linearGradient id="redTop" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff8870"/><stop offset="1" stop-color="#de4436"/></linearGradient>
+                <linearGradient id="orangeTop" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd078"/><stop offset="1" stop-color="#ff9f43"/></linearGradient>
+                <linearGradient id="purpleTop" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d5a5ff"/><stop offset="1" stop-color="#9258dc"/></linearGradient>
+                <linearGradient id="greenTop" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b5e875"/><stop offset="1" stop-color="#4e9f65"/></linearGradient>
+                <linearGradient id="blueTop" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8cecff"/><stop offset="1" stop-color="#21aeda"/></linearGradient>
+                <linearGradient id="aquaTop" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b2ffe8"/><stop offset="1" stop-color="#39d5c0"/></linearGradient>
+                <filter id="softShadow" x="-50%" y="-50%" width="200%" height="220%"><feGaussianBlur in="SourceAlpha" stdDeviation="5"/><feOffset dy="7"/><feComponentTransfer><feFuncA type="linear" slope=".32"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                <filter id="glow" x="-200%" y="-200%" width="400%" height="400%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                <g id="tree"><path d="M0 0v9" stroke="#805c43" stroke-width="2"/><path class="tree-top" d="M0-15 9-2H5L11 5H-11L-5-2H-9Z" fill="#318d68"/></g>
+                <g id="littleBuilding"><path d="M-13 0 0-8 13 0v14h-26Z" fill="#fff2d6" class="building"/><path d="M-15 0 0-10 15 0Z" fill="#cf6951" class="building"/><rect x="-8" y="3" width="4" height="5" class="window"/><rect x="4" y="3" width="4" height="5" class="window"/><path d="M-2 6h4v8h-4z" fill="#96664d"/></g>
+            </defs>
+
+            <!-- 海面、环形涟漪与云朵 -->
+            <ellipse cx="250" cy="225" rx="221" ry="174" fill="url(#sea)"/>
+            <ellipse class="ocean-ring" cx="250" cy="225" rx="218" ry="171"/>
+            <ellipse class="ocean-ring" cx="250" cy="225" rx="196" ry="151" stroke-dasharray="1 11"/>
+            <g class="cloud" transform="translate(73 105)"><circle r="8"/><circle cx="11" cy="-4" r="11"/><circle cx="23" cy="1" r="7"/></g>
+            <g class="cloud two" transform="translate(415 235) scale(.8)"><circle r="8"/><circle cx="11" cy="-4" r="11"/><circle cx="23" cy="1" r="7"/></g>
+            <path class="route" d="M145 166 Q190 120 250 104 T354 166 Q393 220 355 281 T250 232 Q190 260 145 281Z"/>
+            <circle class="route-dot" cx="145" cy="166" r="3"/><circle class="route-dot" cx="250" cy="104" r="3"/><circle class="route-dot" cx="354" cy="166" r="3"/><circle class="route-dot" cx="355" cy="281" r="3"/>
+
+            <!-- 华文空间 -->
+            <g class="island" tabindex="0" role="button" aria-label="华文空间" onclick="showIsland('1. 华文空间 🏮', '沉浸式中华文化体验，包含水墨互动、经典文学朗诵与趣味成语接龙，让文字活起来。')" onkeydown="activateIsland(event, '1. 华文空间 🏮', '沉浸式中华文化体验，包含水墨互动、经典文学朗诵与趣味成语接龙，让文字活起来。')">
+                <ellipse cx="150" cy="207" rx="57" ry="17" fill="#061b35" opacity=".32" filter="url(#softShadow)"/>
+                <path d="M100 178 150 208 200 178 200 194 150 225 100 195Z" fill="#a92f2a"/><path d="M200 178 150 208 150 225 200 195Z" fill="#852920"/>
+                <polygon class="island-top" points="100,140 150,110 200,140 200,180 150,210 100,180" fill="url(#redTop)" stroke="#ffb39a"/>
+                <path d="M111 148 150 124 188 147" fill="none" stroke="#ffc4a5" stroke-width="2" opacity=".6"/>
+                <use href="#littleBuilding" x="151" y="155"/><use href="#tree" x="118" y="169"/><use href="#tree" x="183" y="166"/>
+                <text class="island-label" x="150" y="192" fill="white">华文空间</text>
             </g>
 
-            <!-- 2. 马来文岛 (中上) -->
-            <g class="island" onclick="showIsland('2. 🌐 Ruang Melayu', 'Nikmati keindahan Bahasa Melayu melalui sudut peribahasa interaktif dan pengayaan kosa kata yang menyeronokkan.')">
-                <polygon points="200,80 250,50 300,80 300,120 250,150 200,120" fill="#ff9f43" stroke="#d37e2b" stroke-width="2"/>
-                <polygon points="200,120 250,150 250,165 200,135" fill="#d37e2b"/>
-                <polygon points="300,120 250,150 250,165 300,135" fill="#a65f1a"/>
-                <text x="250" y="105" fill="white" font-size="13" font-weight="bold" text-anchor="middle">Melayu</text>
+            <!-- 马来文空间 -->
+            <g class="island" tabindex="0" role="button" aria-label="Ruang Melayu" onclick="showIsland('2. 🌐 Ruang Melayu', 'Nikmati keindahan Bahasa Melayu melalui sudut peribahasa interaktif dan pengayaan kosa kata yang menyeronokkan.')" onkeydown="activateIsland(event, '2. 🌐 Ruang Melayu', 'Nikmati keindahan Bahasa Melayu melalui sudut peribahasa interaktif dan pengayaan kosa kata yang menyeronokkan.')">
+                <ellipse cx="250" cy="148" rx="56" ry="15" fill="#061b35" opacity=".3" filter="url(#softShadow)"/>
+                <path d="M200 118 250 148 300 118 300 134 250 165 200 135Z" fill="#d37e2b"/><path d="M300 118 250 148 250 165 300 135Z" fill="#9f5d25"/>
+                <polygon class="island-top" points="200,80 250,50 300,80 300,120 250,150 200,120" fill="url(#orangeTop)" stroke="#ffe0a2"/>
+                <path d="M211 87 250 64 288 87" fill="none" stroke="#fff0c8" stroke-width="2" opacity=".7"/>
+                <use href="#littleBuilding" x="250" y="94"/><use href="#tree" x="216" y="108"/><use href="#tree" x="284" y="108"/>
+                <text class="island-label" x="250" y="135" fill="white">Ruang Melayu</text>
             </g>
 
-            <!-- 3. 英文岛 (右上) -->
-            <g class="island" onclick="showIsland('3. English Zone 🇬🇧', 'Level up your English! Dive into simulated drama sessions, grammar quests, and daily global talk shows.')">
-                <polygon points="300,140 350,110 400,140 400,180 350,210 300,180" fill="#9b5de5" stroke="#7b42c4" stroke-width="2"/>
-                <polygon points="300,180 350,210 350,225 300,195" fill="#7b42c4"/>
-                <polygon points="400,180 350,210 350,225 400,195" fill="#5c2e99"/>
-                <text x="350" y="165" fill="white" font-size="13" font-weight="bold" text-anchor="middle">English</text>
+            <!-- 英文空间 -->
+            <g class="island" tabindex="0" role="button" aria-label="English Zone" onclick="showIsland('3. English Zone 🇬🇧', 'Level up your English! Dive into simulated drama sessions, grammar quests, and daily global talk shows.')" onkeydown="activateIsland(event, '3. English Zone 🇬🇧', 'Level up your English! Dive into simulated drama sessions, grammar quests, and daily global talk shows.')">
+                <ellipse cx="350" cy="207" rx="57" ry="17" fill="#061b35" opacity=".32" filter="url(#softShadow)"/>
+                <path d="M300 178 350 208 400 178 400 194 350 225 300 195Z" fill="#7044b0"/><path d="M400 178 350 208 350 225 400 195Z" fill="#512b83"/>
+                <polygon class="island-top" points="300,140 350,110 400,140 400,180 350,210 300,180" fill="url(#purpleTop)" stroke="#e1c4ff"/>
+                <path d="M311 148 350 124 388 147" fill="none" stroke="#f0dcff" stroke-width="2" opacity=".65"/>
+                <use href="#littleBuilding" x="350" y="155"/><use href="#tree" x="318" y="169"/><use href="#tree" x="384" y="166"/>
+                <text class="island-label" x="350" y="192" fill="white">English Zone</text>
             </g>
 
-            <!-- 4. 数学岛 (左下) -->
-            <g class="island" onclick="showIsland('4. 数学几何矩阵 📐', '打破枯燥公式！通过3D几何图形拆解与趣味数理逻辑谜题，带你解锁数字的魔法。')">
-                <polygon points="100,260 150,230 200,260 200,300 150,330 100,300" fill="#4e9f3d" stroke="#3a7d2c" stroke-width="2"/>
-                <polygon points="100,300 150,330 150,345 100,315" fill="#3a7d2c"/>
-                <polygon points="200,300 150,330 150,345 200,315" fill="#295a1e"/>
-                <text x="150" y="285" fill="white" font-size="13" font-weight="bold" text-anchor="middle">数学</text>
+            <!-- 数学空间 -->
+            <g class="island" tabindex="0" role="button" aria-label="数学几何矩阵" onclick="showIsland('4. 数学几何矩阵 📐', '打破枯燥公式！通过3D几何图形拆解与趣味数理逻辑谜题，带你解锁数字的魔法。')" onkeydown="activateIsland(event, '4. 数学几何矩阵 📐', '打破枯燥公式！通过3D几何图形拆解与趣味数理逻辑谜题，带你解锁数字的魔法。')">
+                <ellipse cx="150" cy="328" rx="57" ry="16" fill="#061b35" opacity=".32" filter="url(#softShadow)"/>
+                <path d="M100 298 150 328 200 298 200 314 150 345 100 315Z" fill="#367649"/><path d="M200 298 150 328 150 345 200 315Z" fill="#285b40"/>
+                <polygon class="island-top" points="100,260 150,230 200,260 200,300 150,330 100,300" fill="url(#greenTop)" stroke="#dcff9d"/>
+                <path d="M111 268 150 244 188 267" fill="none" stroke="#e8ffc5" stroke-width="2" opacity=".7"/>
+                <use href="#littleBuilding" x="150" y="275"/><use href="#tree" x="117" y="289"/><use href="#tree" x="184" y="288"/>
+                <text class="island-label" x="150" y="312" fill="white">数学矩阵</text>
             </g>
 
-            <!-- 5. 科学岛 (右下) -->
-            <g class="island" onclick="showIsland('5. 科学实验室 🧪', '漫游神奇自然与宇宙，线上模拟奇妙化学反应与物理实验，像科学家一样思考。')">
-                <polygon points="300,260 350,230 400,260 400,300 350,330 300,300" fill="#00bbf9" stroke="#0096c7" stroke-width="2"/>
-                <polygon points="300,300 350,330 350,345 300,315" fill="#0096c7"/>
-                <polygon points="400,300 350,330 350,345 400,315" fill="#0077b6"/>
-                <text x="350" y="285" fill="white" font-size="13" font-weight="bold" text-anchor="middle">科学</text>
+            <!-- 科学实验室 -->
+            <g class="island" tabindex="0" role="button" aria-label="科学实验室" onclick="showIsland('5. 科学实验室 🧪', '漫游神奇自然与宇宙，线上模拟奇妙化学反应与物理实验，像科学家一样思考。')" onkeydown="activateIsland(event, '5. 科学实验室 🧪', '漫游神奇自然与宇宙，线上模拟奇妙化学反应与物理实验，像科学家一样思考。')">
+                <ellipse cx="350" cy="328" rx="57" ry="16" fill="#061b35" opacity=".32" filter="url(#softShadow)"/>
+                <path d="M300 298 350 328 400 298 400 314 350 345 300 315Z" fill="#087da7"/><path d="M400 298 350 328 350 345 400 315Z" fill="#075a83"/>
+                <polygon class="island-top" points="300,260 350,230 400,260 400,300 350,330 300,300" fill="url(#blueTop)" stroke="#b2f6ff"/>
+                <path d="M311 268 350 244 388 267" fill="none" stroke="#e3ffff" stroke-width="2" opacity=".7"/>
+                <use href="#littleBuilding" x="350" y="275"/><use href="#tree" x="317" y="289"/><use href="#tree" x="384" y="288"/>
+                <text class="island-label" x="350" y="312" fill="white">科学实验室</text>
             </g>
 
-            <!-- 6. 校园交流岛 (中心巨岛) -->
-            <g class="island" onclick="showIsland('6. 阳光校园广场 🏫', '专属线上交流中心。学生可自拟姓名化身数字分身，在这片静谧的空间共同自习与互动。')">
-                <polygon points="200,200 250,170 300,200 300,240 250,270 200,240" fill="#00f5d4" stroke="#00bbf9" stroke-width="2"/>
-                <polygon points="200,240 250,270 250,285 200,255" fill="#00bbf9"/>
-                <polygon points="300,240 250,270 250,285 300,255" fill="#0096c7"/>
-                <text x="250" y="225" fill="#1a1a2e" font-size="14" font-weight="bold" text-anchor="middle">校园交流</text>
+            <!-- 中央校园广场 -->
+            <g class="island" tabindex="0" role="button" aria-label="阳光校园广场" onclick="showIsland('6. 阳光校园广场 🏫', '专属线上交流中心。学生可自拟姓名化身数字分身，在这片静谧的空间共同自习与互动。')" onkeydown="activateIsland(event, '6. 阳光校园广场 🏫', '专属线上交流中心。学生可自拟姓名化身数字分身，在这片静谧的空间共同自习与互动。')">
+                <ellipse cx="250" cy="271" rx="61" ry="18" fill="#061b35" opacity=".38" filter="url(#softShadow)"/>
+                <path d="M200 238 250 268 300 238 300 255 250 285 200 255Z" fill="#079eaa"/><path d="M300 238 250 268 250 285 300 255Z" fill="#08798d"/>
+                <polygon class="island-top" points="200,200 250,170 300,200 300,240 250,270 200,240" fill="url(#aquaTop)" stroke="#d5fff2"/>
+                <path d="M212 208 250 185 288 208" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/>
+                <!-- 中央钟楼与广场小路 -->
+                <path d="M224 227 250 211 276 227 250 243Z" fill="#f2fff1" opacity=".92"/><path d="M230 225v-13l20-12 20 12v13Z" fill="#fff8de" class="building"/><path d="M226 212 250 198 274 212Z" fill="#e8795d"/><path d="M244 198v-8h12v8" fill="#ffd876"/><rect x="236" y="216" width="5" height="6" class="window"/><rect x="259" y="216" width="5" height="6" class="window"/>
+                <path d="M250 235v21" stroke="#fff5b0" stroke-width="3" stroke-dasharray="3 4" opacity=".9"/>
+                <use href="#tree" x="214" y="233"/><use href="#tree" x="286" y="232"/>
+                <text class="island-label" x="250" y="252" fill="#12435a">阳光校园广场</text>
             </g>
         </svg>
-    </div>
+        <div class="map-caption">✦ &nbsp; 点击岛屿，开启你的学习旅程 &nbsp; ✦</div>
+    </main>
 
-    <div id="info-card">
+    <section id="info-card" aria-live="polite" aria-hidden="true">
         <h2 id="island-name">空间名称</h2>
         <p id="island-desc">介绍内容</p>
-        <button id="enter-btn">进入虚拟课室</button>
-    </div>
+        <button id="enter-btn" type="button">进入虚拟课室</button>
+    </section>
 
     <script>
         const card = document.getElementById('info-card');
@@ -106,22 +183,26 @@
         const enterBtn = document.getElementById('enter-btn');
 
         function showIsland(name, desc) {
-            nameEl.innerText = name;
-            descEl.innerText = desc;
+            nameEl.textContent = name;
+            descEl.textContent = desc;
             card.classList.add('active');
-            
-            // 点击���入按钮时的动作
-            enterBtn.onclick = function() {
-                alert(`正在带你化身数字分身，进入【${name}】的50人模拟课室...`);
-                // 未来在这里无缝对接第二步的房间页面
-            };
+            card.setAttribute('aria-hidden', 'false');
+            enterBtn.onclick = () => alert(`正在带你化身数字分身，进入【${name}】的50人模拟课室...`);
         }
 
-        document.body.addEventListener('click', (e) => {
-            if (!e.target.closest('.island') && !e.target.closest('#info-card')) {
-                card.classList.remove('active');
+        function activateIsland(event, name, desc) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                showIsland(name, desc);
             }
-        }, true);
+        }
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.island') && !event.target.closest('#info-card')) {
+                card.classList.remove('active');
+                card.setAttribute('aria-hidden', 'true');
+            }
+        });
     </script>
 </body>
 </html>
