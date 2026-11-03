@@ -3,106 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虚拟学校 3D 政策岛模式</title>
+    <title>虚拟学校 3D 岛屿空间</title>
     <style>
         body { margin: 0; padding: 0; background-color: #1a1a2e; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
-        #title { position: absolute; top: 20px; text-align: center; color: white; font-size: 20px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        #title { position: absolute; top: 20px; text-align: center; color: white; font-size: 22px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 2px; }
         
-        /* 岛屿容器与浮动动画 */
-        .map-container { width: 100vw; height: 60vh; display: flex; justify-content: center; align-items: center; }
+        .map-container { width: 100vw; height: 65vh; display: flex; justify-content: center; align-items: center; }
         svg { width: 100%; height: 100%; overflow: visible; }
         
         .island { cursor: pointer; transition: transform 0.3s ease; animation: float 4s ease-in-out infinite; }
-        .island:nth-child(2) { animation-delay: -1s; }
-        .island:nth-child(3) { animation-delay: -2s; }
-        .island:nth-child(4) { animation-delay: -3s; }
+        .island:nth-child(1) { animation-delay: 0s; }
+        .island:nth-child(2) { animation-delay: -0.6s; }
+        .island:nth-child(3) { animation-delay: -1.2s; }
+        .island:nth-child(4) { animation-delay: -1.8s; }
+        .island:nth-child(5) { animation-delay: -2.4s; }
+        .island:nth-child(6) { animation-delay: -3.0s; }
         
-        .island:hover, .island:active { transform: scale(1.1) translateY(-10px) !important; filter: brightness(1.2); }
+        .island:hover, .island:active { transform: scale(1.08) translateY(-8px) !important; filter: brightness(1.15); }
         
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-8px); }
         }
 
-        /* 交互信息卡片 */
         #info-card {
-            position: absolute; bottom: 40px; background: rgba(255, 255, 255, 0.95); 
+            position: absolute; bottom: 30px; background: rgba(255, 255, 255, 0.95); 
             padding: 15px 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-            text-align: center; width: 80%; max-width: 300px; transition: all 0.3s ease; 
+            text-align: center; width: 85%; max-width: 320px; transition: all 0.3s ease; 
             opacity: 0; transform: translateY(20px); pointer-events: none;
         }
         #info-card.active { opacity: 1; transform: translateY(0); pointer-events: auto; }
-        #info-card h2 { margin: 0 0 5px 0; color: #162447; font-size: 18px; }
-        #info-card p { margin: 0; color: #e43f5a; font-size: 14px; font-weight: bold; }
+        #info-card h2 { margin: 0 0 8px 0; color: #162447; font-size: 18px; }
+        #info-card p { margin: 0 0 12px 0; color: #444; font-size: 14px; line-height: 1.4; }
+        #info-card button { background: #e43f5a; color: white; border: none; padding: 6px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; width: 100%; }
     </style>
 </head>
 <body>
-    <div id="title">🏫 虚拟学校 3D 岛屿地图</div>
+    <div id="title">🏫 虚拟学校 · 3D 空间</div>
 
     <div class="map-container">
-        <!-- 使用 SVG 绘制仿 3D 轴测视角的六边形岛屿集群（参考政策岛） -->
-        <svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
-            <!-- 理学院岛 (左) -->
-            <g class="island" onclick="showIsland('理学院岛 🧪', '探索微积分与 AI 绘画的奥秘')">
-                <polygon points="120,160 170,130 220,160 220,200 170,230 120,200" fill="#4e9f3d" stroke="#3a7d2c" stroke-width="2"/>
-                <polygon points="120,200 170,230 170,250 120,220" fill="#3a7d2c"/>
-                <polygon points="220,200 170,230 170,250 220,220" fill="#295a1e"/>
-                <text x="170" y="185" fill="white" font-size="14" font-weight="bold" text-anchor="middle">理学院</text>
+        <svg viewBox="0 0 500 450" preserveAspectRatio="xMidYMid meet">
+            <!-- 1. 华文岛 (左上) -->
+            <g class="island" onclick="showIsland('1. 华文空间 🏮', '沉浸式中华文化体验，包含水墨互动、经典文学朗诵与趣味成语接龙，让文字活起来。')">
+                <polygon points="100,140 150,110 200,140 200,180 150,210 100,180" fill="#de4436" stroke="#b22f24" stroke-width="2"/>
+                <polygon points="100,180 150,210 150,225 100,195" fill="#b22f24"/>
+                <polygon points="200,180 150,210 150,225 200,195" fill="#8a2017"/>
+                <text x="150" y="165" fill="white" font-size="13" font-weight="bold" text-anchor="middle">华文</text>
             </g>
 
-            <!-- 文学院岛 (上) -->
-            <g class="island" onclick="showIsland('文学院岛 📚', '数字人文与新媒体艺术展演中心')">
+            <!-- 2. 马来文岛 (中上) -->
+            <g class="island" onclick="showIsland('2. 🌐 Ruang Melayu', 'Nikmati keindahan Bahasa Melayu melalui sudut peribahasa interaktif dan pengayaan kosa kata yang menyeronokkan.')">
                 <polygon points="200,80 250,50 300,80 300,120 250,150 200,120" fill="#ff9f43" stroke="#d37e2b" stroke-width="2"/>
-                <polygon points="200,120 250,150 250,170 200,140" fill="#d37e2b"/>
-                <polygon points="300,120 250,150 250,170 300,140" fill="#a65f1a"/>
-                <text x="250" y="105" fill="white" font-size="14" font-weight="bold" text-anchor="middle">文学院</text>
+                <polygon points="200,120 250,150 250,165 200,135" fill="#d37e2b"/>
+                <polygon points="300,120 250,150 250,165 300,135" fill="#a65f1a"/>
+                <text x="250" y="105" fill="white" font-size="13" font-weight="bold" text-anchor="middle">Melayu</text>
             </g>
 
-            <!-- 魔法社团岛 (右) -->
-            <g class="island" onclick="showIsland('魔法社团岛 🪄', '这里有最酷炫的交互设计与桌游社')">
-                <polygon points="280,160 330,130 380,160 380,200 330,230 280,200" fill="#9b5de5" stroke="#7b42c4" stroke-width="2"/>
-                <polygon points="280,200 330,230 330,250 280,220" fill="#7b42c4"/>
-                <polygon points="380,200 330,230 330,250 380,220" fill="#5c2e99"/>
-                <text x="330" y="185" fill="white" font-size="14" font-weight="bold" text-anchor="middle">社团岛</text>
+            <!-- 3. 英文岛 (右上) -->
+            <g class="island" onclick="showIsland('3. English Zone 🇬🇧', 'Level up your English! Dive into simulated drama sessions, grammar quests, and daily global talk shows.')">
+                <polygon points="300,140 350,110 400,140 400,180 350,210 300,180" fill="#9b5de5" stroke="#7b42c4" stroke-width="2"/>
+                <polygon points="300,180 350,210 350,225 300,195" fill="#7b42c4"/>
+                <polygon points="400,180 350,210 350,225 400,195" fill="#5c2e99"/>
+                <text x="350" y="165" fill="white" font-size="13" font-weight="bold" text-anchor="middle">English</text>
             </g>
 
-            <!-- 行政资源岛 (下) -->
-            <g class="island" onclick="showIsland('行政资源岛 🏛️', '虚拟校长室与教务处选课指南')">
-                <polygon points="200,240 250,210 300,240 300,280 250,310 200,280" fill="#00bbf9" stroke="#0096c7" stroke-width="2"/>
-                <polygon points="200,280 250,310 250,330 200,300" fill="#0096c7"/>
-                <polygon points="300,280 250,310 250,330 300,300" fill="#0077b6"/>
-                <text x="250" y="265" fill="white" font-size="14" font-weight="bold" text-anchor="middle">行政岛</text>
+            <!-- 4. 数学岛 (左下) -->
+            <g class="island" onclick="showIsland('4. 数学几何矩阵 📐', '打破枯燥公式！通过3D几何图形拆解与趣味数理逻辑谜题，带你解锁数字的魔法。')">
+                <polygon points="100,260 150,230 200,260 200,300 150,330 100,300" fill="#4e9f3d" stroke="#3a7d2c" stroke-width="2"/>
+                <polygon points="100,300 150,330 150,345 100,315" fill="#3a7d2c"/>
+                <polygon points="200,300 150,330 150,345 200,315" fill="#295a1e"/>
+                <text x="150" y="285" fill="white" font-size="13" font-weight="bold" text-anchor="middle">数学</text>
+            </g>
+
+            <!-- 5. 科学岛 (右下) -->
+            <g class="island" onclick="showIsland('5. 科学实验室 🧪', '漫游神奇自然与宇宙，线上模拟奇妙化学反应与物理实验，像科学家一样思考。')">
+                <polygon points="300,260 350,230 400,260 400,300 350,330 300,300" fill="#00bbf9" stroke="#0096c7" stroke-width="2"/>
+                <polygon points="300,300 350,330 350,345 300,315" fill="#0096c7"/>
+                <polygon points="400,300 350,330 350,345 400,315" fill="#0077b6"/>
+                <text x="350" y="285" fill="white" font-size="13" font-weight="bold" text-anchor="middle">科学</text>
+            </g>
+
+            <!-- 6. 校园交流岛 (中心巨岛) -->
+            <g class="island" onclick="showIsland('6. 阳光校园广场 🏫', '专属线上交流中心。学生可自拟姓名化身数字分身，在这片静谧的空间共同自习与互动。')">
+                <polygon points="200,200 250,170 300,200 300,240 250,270 200,240" fill="#00f5d4" stroke="#00bbf9" stroke-width="2"/>
+                <polygon points="200,240 250,270 250,285 200,255" fill="#00bbf9"/>
+                <polygon points="300,240 250,270 250,285 300,255" fill="#0096c7"/>
+                <text x="250" y="225" fill="#1a1a2e" font-size="14" font-weight="bold" text-anchor="middle">校园交流</text>
             </g>
         </svg>
     </div>
 
     <div id="info-card">
-        <h2 id="island-name">学院名称</h2>
-        <p id="island-desc">点击查看课程成果</p>
+        <h2 id="island-name">空间名称</h2>
+        <p id="island-desc">介绍内容</p>
+        <button id="enter-btn">进入虚拟课室</button>
     </div>
 
     <script>
         const card = document.getElementById('info-card');
         const nameEl = document.getElementById('island-name');
         const descEl = document.getElementById('island-desc');
+        const enterBtn = document.getElementById('enter-btn');
 
         function showIsland(name, desc) {
             nameEl.innerText = name;
             descEl.innerText = desc;
             card.classList.add('active');
             
-            // 点击空白处或3秒后自动隐藏卡片
-            setTimeout(() => {
-                // 如果用户点击了其他岛，就不自动隐藏
-                if(nameEl.innerText === name) {
-                    // card.classList.remove('active');
-                }
-            }, 5000);
+            // 点击���入按钮时的动作
+            enterBtn.onclick = function() {
+                alert(`正在带你化身数字分身，进入【${name}】的50人模拟课室...`);
+                // 未来在这里无缝对接第二步的房间页面
+            };
         }
 
-        // 点击背景关闭卡片
         document.body.addEventListener('click', (e) => {
-            if (!e.target.closest('.island')) {
+            if (!e.target.closest('.island') && !e.target.closest('#info-card')) {
                 card.classList.remove('active');
             }
         }, true);
